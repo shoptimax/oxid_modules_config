@@ -2,6 +2,7 @@
 [{assign var="aSettings" value=$oView->getSettingsList()}]
 [{assign var="sAction" value=$oView->getAction()}]
 [{assign var="aErrors" value=$oView->getErrors()}]
+[{assign var="aMessages" value=$oView->getMessages()}]
 [{include file="headitem.tpl" title="OXPS_MODULESCONFIG_DASHBOARD"|oxmultilangassign}]
 [{oxstyle include=$oViewConf->getModuleUrl('oxps/modulesconfig', 'out/src/css/admin_oxpsmodulesconfig.css')}]
 [{oxstyle}]
@@ -25,6 +26,15 @@
                 <ul>
                     [{foreach from=$aErrors item="sErrorCode"}]
                     <li>[{oxmultilang ident=$sErrorCode}]</li>
+                    [{/foreach}]
+                </ul>
+            </div>
+            [{/if}]
+            [{if $aMessages}]
+            <div class="messagebox">
+                <ul>
+                    [{foreach from=$aMessages item="sMessageCode"}]
+                    <li>[{oxmultilang ident=$sMessageCode}]</li>
                     [{/foreach}]
                 </ul>
             </div>

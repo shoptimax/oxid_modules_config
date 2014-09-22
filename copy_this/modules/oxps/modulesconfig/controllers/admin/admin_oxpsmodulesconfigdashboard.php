@@ -37,10 +37,11 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
 
     /**
      * List of module related configuration parameters to export or import.
+     * These are parts of module metadata which are registered stored in database.
      *
      * @var array
      */
-    protected $_aModuleSettings = array('metadata', 'extend', 'files', 'templates', 'blocks', 'settings', 'events');
+    protected $_aModuleSettings = array('version', 'extend', 'files', 'templates', 'blocks', 'settings', 'events');
 
     /**
      * Current action name.
@@ -56,6 +57,13 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
      * @var array
      */
     protected $_aErrors = array();
+
+    /**
+     * Success messages to display.
+     *
+     * @var array
+     */
+    protected $_aMessages = array();
 
 
     /**
@@ -117,8 +125,18 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     }
 
     /**
-     * Export/Import action.
-     * Collect form and import files data, validates it and performs the export or backup plus import.
+     * Get success messages list.
+     *
+     * @return array
+     */
+    public function getMessages()
+    {
+        return $this->_aMessages;
+    }
+
+    /**
+     * Export, backup amd import actions handler.
+     * Collect form and import files data, validates it and performs the export or backup, or backup plus import.
      *
      * @return bool
      */
@@ -147,19 +165,23 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
                 if ( !$this->_validateImportData( $aImportData ) ) {
                     return false;
                 } else {
-                    $this->_backupModuleSettings();
+                    $this->_backupModuleSettings( $this->_getAllModulesAndSettingsData(), 'full_backup' );
                     $this->_importModulesConfig( $aRequestData, $aImportData );
                 }
+
                 break;
 
             default:
-                return false;
                 break;
         }
 
-        return true;
+        return false;
     }
 
+
+    /*------------------------
+     *- REQUEST DATA GETTERS -
+     ------------------------*/
 
     /**
      * Collect action data from request parameters.
@@ -188,10 +210,36 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         return array('modules' => $aModules, 'settings' => $aSettings, 'action' => $sAction);
     }
 
+    /**
+     * Simulate action data with all modules elected and all settings checked.
+     *
+     * @return array
+     */
+    protected function _getAllModulesAndSettingsData()
+    {
+        return array(
+            'modules'  => array_keys( $this->getModulesList() ),
+            'settings' => array_keys( $this->getSettingsList() ),
+            'action'   => ''
+        );
+    }
+
+    /**
+     * Get uploaded import files data.
+     *
+     * @return null|array
+     */
     protected function _getImportData()
     {
-        return array(); //todo ddr
+        $oConfig = $this->getConfig();
+
+        return $oConfig->getUploadedFile( 'oxpsmodulesconfig_file' );
     }
+
+
+    /*--------------------
+     *---- VALIDATION ----
+     --------------------*/
 
     /**
      * Validate request data and collect errors if any.
@@ -211,9 +259,27 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         return empty( $this->_aErrors );
     }
 
+    /**
+     * Validate uploaded import file data and content and collect errors if any.
+     *
+     * @param array $aData
+     *
+     * @return bool
+     */
     protected function _validateImportData( array $aData )
     {
-        return true; //TODO DDR
+        if ( empty( $aData ) ) {
+            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_NO_FILE';
+        }
+
+        if ( !empty( $aData['error'] ) ) {
+            $this->_setFileUploadError( $aData['error'] );
+        }
+
+        $this->_validateImportFile( $aData );
+        $this->_validateJsonData( $aData );
+
+        return empty( $this->_aErrors );
     }
 
     /**
@@ -271,6 +337,65 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     }
 
     /**
+     * Set error by file upload error code.
+     *
+     * @param int $iFileUploadErrorCode
+     */
+    protected function _setFileUploadError( $iFileUploadErrorCode )
+    {
+        $aFileUploadErrors = array(
+            UPLOAD_ERR_INI_SIZE   => 'OXPS_MODULESCONFIG_ERR_FILE_SIZE',
+            UPLOAD_ERR_FORM_SIZE  => 'OXPS_MODULESCONFIG_ERR_FILE_SIZE',
+            UPLOAD_ERR_PARTIAL    => 'OXPS_MODULESCONFIG_ERR_UPLOAD_ERROR',
+            UPLOAD_ERR_NO_FILE    => 'OXPS_MODULESCONFIG_ERR_NO_FILE',
+            UPLOAD_ERR_NO_TMP_DIR => 'OXPS_MODULESCONFIG_ERR_UPLOAD_ERROR',
+            UPLOAD_ERR_CANT_WRITE => 'OXPS_MODULESCONFIG_ERR_UPLOAD_ERROR',
+            UPLOAD_ERR_EXTENSION  => 'OXPS_MODULESCONFIG_ERR_FILE_TYPE',
+        );
+
+        $sErrorCode = array_key_exists( $iFileUploadErrorCode, $aFileUploadErrors ) ?
+            $aFileUploadErrors[$iFileUploadErrorCode] :
+            'OXPS_MODULESCONFIG_ERR_UPLOAD_ERROR';
+
+        $this->_aErrors[] = $sErrorCode;
+    }
+
+    /**
+     * Validate uploaded file to be of JSON type and readable.
+     *
+     * @param array $aFileData
+     */
+    protected function _validateImportFile( array $aFileData )
+    {
+        if ( empty( $aFileData['type'] ) or $aFileData['type'] !== 'application/json' ) {
+            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_FILE_TYPE';
+        }
+
+        if ( !is_file( $aFileData['tmp_name'] ) or !is_readable( $aFileData['tmp_name'] ) ) {
+            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_CANNOT_READ_FILE';
+        }
+    }
+
+    /**
+     * Set JSON import data from file and check modules configuration data for errors.
+     *
+     * @param array $aFileData
+     */
+    protected function _validateJsonData( array $aFileData )
+    {
+        /** @var oxpsModulesConfigTransfer $oModulesConfig */
+        $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
+        $oModulesConfig->setImportDataFromFile( $aFileData );
+
+        $this->_aErrors[] = array_merge( $this->_aErrors, $oModulesConfig->getImportDataValidationErrors() );
+    }
+
+
+    /*--------------------
+     *----- ACTIONS ------
+     --------------------*/
+
+    /**
      * Export checked settings of the selected modules to JSON file and pass it for download.
      *
      * @param array $aData
@@ -280,18 +405,51 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         /** @var oxpsModulesConfigTransfer $oModulesConfig */
         $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
         $oModulesConfig->exportForDownload( $aData );
+
+        $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_EXPORT_FAILED';
     }
 
-    protected function _backupModuleSettings( array $aData = array() )
+    /**
+     * Export checked settings of the selected modules to JSON file and save it in file system.
+     *
+     * @param array  $aData
+     * @param string $sBackupFileSuffix
+     */
+    protected function _backupModuleSettings( array $aData, $sBackupFileSuffix = '' )
     {
-        D::b( $aData ); //todo ddr
+        /** @var oxpsModulesConfigTransfer $oModulesConfig */
+        $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
+
+        if ( !$oModulesConfig->backupToFile( $aData, $sBackupFileSuffix ) ) {
+            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_BACKUP_FAILED';
+        } else {
+            $this->_aMessages[] = 'OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS';
+        }
     }
 
+    /**
+     * Initialize import helper with uploaded file data and perform import for checked settings of selected modules.
+     * On successful import clear eShop cache.
+     *
+     * @todo: Trigger modules events and update views?
+     *
+     * @param array $aRequestData
+     * @param array $aImportData
+     */
     protected function _importModulesConfig( array $aRequestData, array $aImportData )
     {
-        D::d( $aRequestData );
-        D::d( $aImportData );
+        /** @var oxpsModulesConfigTransfer $oModulesConfig */
+        $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
+        $oModulesConfig->setImportDataFromFile( $aImportData );
 
-        D::b(); //TODO DDR
+        if ( !$oModulesConfig->importData( $aRequestData ) ) {
+            $this->_aErrors[] = array_merge( $this->_aErrors, $oModulesConfig->getImportErrors() );
+        } else {
+            $this->_aMessages[] = 'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS';
+
+            /** @var oxpsModulesConfigModule $oModule */
+            $oModule = oxRegistry::get( 'oxpsModulesConfigModule' );
+            $oModule::cleanTmp();
+        }
     }
 }

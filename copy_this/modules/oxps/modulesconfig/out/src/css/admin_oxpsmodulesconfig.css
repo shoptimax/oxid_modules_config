@@ -6,6 +6,10 @@ div.box {
     padding: 0;
 }
 
+div.messagebox, div.errorbox {
+    margin-bottom: 10px;
+}
+
 form#oxpsmodulesconfig div {
     margin-bottom: 30px;
 }
