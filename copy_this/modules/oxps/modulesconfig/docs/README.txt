@@ -11,7 +11,7 @@ oxps
 5.1.x/4.8.x-5.2.x/4.9.x
 
 ==Version==
-0.0.1
+0.1.0
 
 ==Link==
 http://www.oxid-esales.com

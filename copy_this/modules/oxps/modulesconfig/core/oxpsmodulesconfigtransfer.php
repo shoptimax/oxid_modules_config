@@ -17,25 +17,18 @@
 /**
  * Class oxpsModulesConfigTransfer
  * Modules configuration export, backup and import actions handler.
+ *
+ * @todo ddr: Refactor the class to fit 500 lines: Setting (load / save)
  */
 class oxpsModulesConfigTransfer extends oxSuperCfg
 {
 
     /**
-     * Settings map.
-     * Maps setting name from metadata to its related class name or title and key.
+     * Import data.
      *
      * @var array
      */
-    protected $_settingsMap = array(
-        'version'   => array('oxConfig', 'aModuleVersions'),
-        'extend'    => array('oxConfig-Common', 'aModules'),
-        'files'     => array('oxConfig', 'aModuleFiles'),
-        'templates' => array('oxConfig', 'aModuleTemplates'),
-        'blocks'    => array('', ''),
-        'settings'  => array('oxConfig-List', ''),
-        'events'    => array('oxConfig', 'aModuleEvents'),
-    );
+    protected $_aImportData = array();
 
 
     /**
@@ -71,24 +64,74 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         return file_put_contents( $sBackupsPath . $sFileName, json_encode( $aBackupData ) );
     }
 
+    /**
+     * Get import data from uploaded file and set it decoded from JSON to array.
+     *
+     * @param array $aImportFileData
+     */
     public function setImportDataFromFile( array $aImportFileData )
     {
-        //TODO DDR
+        if ( !empty( $aImportFileData['tmp_name'] ) and is_file( $aImportFileData['tmp_name'] ) ) {
+            $sData = file_get_contents( $aImportFileData['tmp_name'] );
+
+            if ( !empty( $sData ) ) {
+                $this->_aImportData = (array) json_decode( $sData );
+            }
+        }
     }
 
+    /**
+     * Validate import data and return errors list if any.
+     *
+     * @return array
+     */
     public function getImportDataValidationErrors()
     {
-        return array(); //todo ddr
+        /** @var oxpsModulesConfigValidator $oImportDataValidator */
+        $oImportDataValidator = oxRegistry::get( 'oxpsModulesConfigValidator' );
+        $oImportDataValidator->init( $this->_aImportData, $this->_getSettingsDataHeader() );
+
+        return (array) $oImportDataValidator->validate();
     }
 
-    public function importData( array $aImportParameters )
+    /**
+     * Import modules configuration data for checked settings of selected modules.
+     *
+     * @todo: Logging to file.
+     * @todo: Roll back to last automatic full backup on failure.
+     *
+     * @param array $aParameters
+     *
+     * @return bool
+     */
+    public function importData( array $aParameters )
     {
-        return true; //todo ddr
+        $aImportData    = (array) reset( $this->_aImportData );
+        $aImportModules = (array) $aImportData['aModules'];
+
+        foreach ( $aParameters['modules'] as $sModuleId ) {
+            if ( array_key_exists( $sModuleId, $aImportModules ) ) {
+                $aImportModule = (array) $aImportModules[$sModuleId];
+
+                foreach ( $aParameters['settings'] as $sSetting ) {
+                    $this->_setSettingValue( $sModuleId, $sSetting, $aImportModule[$sSetting] );
+                }
+            }
+        }
+
+        return true;
     }
 
+    /**
+     * Get errors that occurred during import.
+     *
+     * @todo: Implement it when Logging is implemented (should have both success log and import errors)
+     *
+     * @return array
+     */
     public function getImportErrors()
     {
-        return array(); //todo ddr
+        return array();
     }
 
     /**
@@ -163,7 +206,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      *
      * @return array
      */
-    protected function _getSettingsDataHeader( array $aModules )
+    protected function _getSettingsDataHeader( array $aModules = array() )
     {
         /** @var oxConfig $oConfig */
         $oConfig = $this->getConfig();
@@ -189,69 +232,25 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     protected function _getSettingValue( $sModuleId, $sSetting )
     {
-        list( $sSettingClass, $sSettingField ) = $this->_getSettingMap( $sSetting );
+        /** @var oxpsModulesConfigStorage $oConfigurationStorage */
+        $oConfigurationStorage = oxRegistry::get( 'oxpsModulesConfigStorage' );
 
-        return $this->_loadSettingValue( $sModuleId, $sSettingClass, $sSettingField );
+        return $oConfigurationStorage->load( $sModuleId, $sSetting );
     }
 
     /**
-     * Get setting object and key by setting name.
-     *
-     * @param string $sSetting
-     *
-     * @return array
-     */
-    protected function _getSettingMap( $sSetting )
-    {
-        if ( !array_key_exists( $sSetting, $this->_settingsMap ) ) {
-            return array('', '');
-        }
-
-        return $this->_settingsMap[$sSetting];
-    }
-
-    /**
-     * Load setting by module ID, setting class name/title and related setting key.
-     * It could be either module related value from oxConfig or common modules setting,
-     * module settings list or module blocks list.
+     * Set module setting value.
+     * Maps setting name to its related class and key or field and saves the value.
      *
      * @param string $sModuleId
-     * @param string $sClassTitle
-     * @param string $sKey
-     *
-     * @return array|mixed|null
+     * @param string $sSetting
+     * @param mixed  $mValue
      */
-    protected function _loadSettingValue( $sModuleId, $sClassTitle, $sKey )
+    protected function _setSettingValue( $sModuleId, $sSetting, $mValue )
     {
-        $mSetting = null;
+        /** @var oxpsModulesConfigStorage $oConfigurationStorage */
+        $oConfigurationStorage = oxRegistry::get( 'oxpsModulesConfigStorage' );
 
-        if ( empty( $sClassTitle ) or empty( $sKey ) ) {
-            return $mSetting;
-        }
-
-        if ( $sClassTitle === 'oxConfig' ) {
-            $mAllSetting = $this->getConfig()->getShopConfVar( $sKey );
-            $mSetting    = $this->_filterByModule( $mAllSetting, $sModuleId );
-            // TODO DDR other types
-        }
-
-        return $mSetting;
-    }
-
-    /**
-     * Get settings only for a module.
-     *
-     * @param array|mixed $mAllSetting
-     * @param string      $sModuleId
-     *
-     * @return array|mixed
-     */
-    protected function _filterByModule( $mAllSetting, $sModuleId )
-    {
-        if ( is_array( $mAllSetting ) and array_key_exists( $sModuleId, $mAllSetting ) ) {
-            return $mAllSetting[$sModuleId];
-        }
-
-        return null;
+        $oConfigurationStorage->save( $sModuleId, $sSetting, $mValue );
     }
 }

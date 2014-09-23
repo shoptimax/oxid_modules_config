@@ -75,6 +75,13 @@ $aLang = array(
                                                 'containing modules configuration data.',
 
     // JSON data errors
+    'OXPS_MODULESCONFIG_ERR_EMPTY_DATA'      => 'Import data was not found. Please select a valid JSON file ' .
+                                                'containing modules configuration data.',
+    'OXPS_MODULESCONFIG_ERR_INVALID_FORMAT'  => 'Import data structure is invalid. Please select a valid JSON file ' .
+                                                'containing modules configuration data.',
+    'OXPS_MODULESCONFIG_ERR_SHOP_VERSION'    => 'Import data rejected because shop version does not match.',
+    'OXPS_MODULESCONFIG_ERR_SHOP_EDITION'    => 'Import data rejected because shop edition does not match.',
+    'OXPS_MODULESCONFIG_ERR_WRONG_SUBSHOP'   => 'Import data rejected because sub-shop ID does not match.',
 
     // Messages
     'OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS'  => 'Backup was created successfully. ' .

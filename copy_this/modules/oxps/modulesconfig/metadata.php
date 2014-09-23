@@ -33,7 +33,7 @@ $aModule = array(
         'en' => 'Modules configuration export and import tools',
     ),
     'thumbnail'   => 'out/pictures/picture.png',
-    'version'     => '0.0.1',
+    'version'     => '0.1.0',
     'author'      => 'OXID Professional Services',
     'url'         => 'http://www.oxid-esales.com',
     'email'       => 'info@oxid-esales.com',
@@ -42,6 +42,8 @@ $aModule = array(
         'admin_oxpsmodulesconfigdashboard' => 'oxps/modulesconfig/controllers/admin/admin_oxpsmodulesconfigdashboard.php',
         'oxpsmodulesconfigmodule'          => 'oxps/modulesconfig/core/oxpsmodulesconfigmodule.php',
         'oxpsmodulesconfigtransfer'        => 'oxps/modulesconfig/core/oxpsmodulesconfigtransfer.php',
+        'oxpsmodulesconfigvalidator'       => 'oxps/modulesconfig/core/oxpsmodulesconfigvalidator.php',
+        'oxpsmodulesconfigstorage'         => 'oxps/modulesconfig/models/oxpsmodulesconfigstorage.php',
     ),
     'templates'   => array(
         'admin_oxpsmodulesconfigdashboard.tpl' => 'oxps/modulesconfig/views/admin/admin_oxpsmodulesconfigdashboard.tpl',

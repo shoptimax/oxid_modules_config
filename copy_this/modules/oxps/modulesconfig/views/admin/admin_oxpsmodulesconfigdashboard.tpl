@@ -102,4 +102,5 @@
         </td>
     </tr>
 </table>
+[{oxscript add="selectAllModules(true);"}]
 [{include file="bottomitem.tpl"}]

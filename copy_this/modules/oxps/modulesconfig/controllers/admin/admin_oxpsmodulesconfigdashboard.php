@@ -367,7 +367,9 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
      */
     protected function _validateImportFile( array $aFileData )
     {
-        if ( empty( $aFileData['type'] ) or $aFileData['type'] !== 'application/json' ) {
+        if ( empty( $aFileData['type'] ) or
+             !in_array( $aFileData['type'], array('application/json', 'application/octet-stream') )
+        ) {
             $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_FILE_TYPE';
         }
 
@@ -387,7 +389,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
         $oModulesConfig->setImportDataFromFile( $aFileData );
 
-        $this->_aErrors[] = array_merge( $this->_aErrors, $oModulesConfig->getImportDataValidationErrors() );
+        $this->_aErrors = array_merge( $this->_aErrors, $oModulesConfig->getImportDataValidationErrors() );
     }
 
 
@@ -443,7 +445,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $oModulesConfig->setImportDataFromFile( $aImportData );
 
         if ( !$oModulesConfig->importData( $aRequestData ) ) {
-            $this->_aErrors[] = array_merge( $this->_aErrors, $oModulesConfig->getImportErrors() );
+            $this->_aErrors = array_merge( $this->_aErrors, $oModulesConfig->getImportErrors() );
         } else {
             $this->_aMessages[] = 'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS';
 

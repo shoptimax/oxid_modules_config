@@ -19,4 +19,6 @@ $sLangName = 'Deutsch';
 $aLang = array(
     'charset'           => 'ISO-8859-15', // Supports DE chars like: ä, ü, ö, etc.
     'oxpsmodulesconfig' => 'Modules Config',
+
+    //todo ddr: Before initial release copy translation from EN file with [TR-..] pattern.
 );
