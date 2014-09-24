@@ -39,10 +39,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         $aExportData = $this->_getSettingsData( $aExportParameters );
         $sFileName   = $this->_getJsonFileName();
 
-        header( 'Content-disposition: attachment; filename=' . $sFileName );
-        header( 'Content-type: application/json' );
-
-        exit( json_encode( $aExportData ) );
+        $this->_jsonDownload( $sFileName, $aExportData );
     }
 
     /**
@@ -133,7 +130,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
     }
 
     /**
-     * Collect requested settings for selected modules.
+     * Collect requested settings for selected modules for data export.
      *
      * @param array $aParameters
      *
@@ -143,18 +140,40 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
     {
         $aModules = array();
 
-        foreach ( $aParameters['modules'] as $sModuleId ) {
+        if ( isset( $aParameters['modules'], $aParameters['settings'] ) and
+             is_array( $aParameters['modules'] ) and
+             is_array( $aParameters['settings'] )
+        ) {
+            $aModules = $this->_getSettingsValues( $aParameters['modules'], $aParameters['settings'] );
+        }
+
+        return $this->_getSettingsDataHeader( $aModules );
+    }
+
+    /**
+     * Get requested settings list for each requested module.
+     *
+     * @param array $aRequestedModules
+     * @param array $sRequestedSettings
+     *
+     * @return array
+     */
+    protected function _getSettingsValues( array $aRequestedModules, array $sRequestedSettings )
+    {
+        $aModules = array();
+
+        foreach ( $aRequestedModules as $sModuleId ) {
 
             if ( !array_key_exists( $sModuleId, $aModules ) ) {
                 $aModules[$sModuleId] = array();
             }
 
-            foreach ( $aParameters['settings'] as $sSetting ) {
+            foreach ( $sRequestedSettings as $sSetting ) {
                 $aModules[$sModuleId][$sSetting] = $this->_getSettingValue( $sModuleId, $sSetting );
             }
         }
 
-        return $this->_getSettingsDataHeader( $aModules );
+        return $aModules;
     }
 
     /**
@@ -171,6 +190,22 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
             date( 'Y-m-d_H-i-s' ),
             empty( $sBackupSuffix ) ? '' : ( '.' . $sBackupSuffix )
         );
+    }
+
+    /**
+     * Fetch JSON data as a file download.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $sFileName
+     * @param string $sFileData
+     */
+    protected function _jsonDownload( $sFileName, $sFileData )
+    {
+        header( 'Content-disposition: attachment; filename=' . $sFileName );
+        header( 'Content-type: application/json' );
+
+        exit( json_encode( $sFileData ) );
     }
 
     /**
