@@ -134,9 +134,11 @@ class oxpsModulesConfigStorage extends oxConfig
     {
         switch ( $sSettingOrigin ) {
             case 'oxConfig':
-                $mAllSettings             = $this->getShopConfVar( $sSettingKey );
-                $mAllSettings[$sModuleId] = ( $sSettingKey === 'aModuleVersions' ) ? (string) $mValue : (array) $mValue;
-                $this->saveShopConfVar( 'arr', $sSettingKey, $mAllSettings );
+                $this->_saveToShopConfig( $sModuleId, $sSettingKey, $mValue );
+                break;
+
+            case 'oxConfig-Global':
+                $this->_saveToShopConfigMerged( $sModuleId, $sSettingKey, (array) $mValue );
                 break;
 
             case 'oxConfig-List':
@@ -146,8 +148,6 @@ class oxpsModulesConfigStorage extends oxConfig
             case 'oxtplblocks':
                 $this->_saveModuleBlocks( $sModuleId, (array) $mValue );
                 break;
-
-            // TODO DDR other types and separate method for case "oxConfig"
 
             default:
                 break;
@@ -176,6 +176,8 @@ class oxpsModulesConfigStorage extends oxConfig
     /**
      * Load combined modules setting from shop configuration and separate only requested module settings.
      *
+     * @todo: Now it takes all settings for all modules. Separate settings for each module: needs metadata for that.
+     *
      * @param string $sModuleId
      * @param string $sSettingKey
      *
@@ -183,11 +185,7 @@ class oxpsModulesConfigStorage extends oxConfig
      */
     protected function _loadFromShopConfigAndSeparate( $sModuleId, $sSettingKey )
     {
-        $aExtendedClasses = (array) $this->getShopConfVar( $sSettingKey );
-
-        //todo ddr: implement it somehow...
-
-        return $aExtendedClasses;
+        return (array) $this->getShopConfVar( $sSettingKey );
     }
 
     /**
@@ -231,6 +229,41 @@ class oxpsModulesConfigStorage extends oxConfig
                 $oDb->quote( $sModuleId )
             )
         );
+    }
+
+    /**
+     * Update shop config setting with module settings value(s).
+     * It loads a multi-module settings set, adjusts settings for a module and then saves it all back to shop config.
+     *
+     * @param string $sModuleId
+     * @param string $sSettingKey
+     * @param mixed  $mSettings
+     */
+    protected function _saveToShopConfig( $sModuleId, $sSettingKey, $mSettings )
+    {
+        $mAllSettings = $this->getShopConfVar( $sSettingKey );
+
+        $mAllSettings[$sModuleId] = ( $sSettingKey === 'aModuleVersions' )
+            ? (string) $mSettings
+            : (array) $mSettings;
+
+        $this->saveShopConfVar( 'arr', $sSettingKey, $mAllSettings );
+    }
+
+    /**
+     * Update combined shop config setting with module settings value(s).
+     * It loads a combined multi-module setting, separates settings for each module,
+     * adjust the module settings and then saves it all back to shop config.
+     *
+     * @todo: Together with method _loadFromShopConfigAndSeparate, make it merge and then save settings. Now save all.
+     *
+     * @param string $sModuleId
+     * @param string $sSettingKey
+     * @param array  $aSettings
+     */
+    protected function _saveToShopConfigMerged( $sModuleId, $sSettingKey, array $aSettings )
+    {
+        $this->saveShopConfVar( 'arr', $sSettingKey, $aSettings );
     }
 
     /**

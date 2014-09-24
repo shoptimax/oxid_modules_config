@@ -83,19 +83,44 @@ class oxpsModulesConfigModule extends oxModule
      *
      * @return bool
      */
-    public static function cleanTmp()
+    public static function cleanTmp( $sClearFolderPath = '' )
     {
-        if ( class_exists( 'D' ) ) {
-            try {
-                D::c();
-            } catch ( Exception $ex ) {
-                error_log( 'Cache files deletion failed: ' . $ex->getMessage() );
-            }
+        $sTempFolderPath = oxRegistry::getConfig()->getConfigParam( 'sCompileDir' );
 
-            return true;
+        if ( !empty( $sClearFolderPath ) and
+             ( strpos( $sClearFolderPath, $sTempFolderPath ) !== false ) and
+             is_dir( $sClearFolderPath )
+        ) {
+
+            // User argument folder path to delete from
+            $sFolderPath = $sClearFolderPath;
+        } elseif ( empty( $sClearFolderPath ) ) {
+
+            // Use temp folder path from settings
+            $sFolderPath = $sTempFolderPath;
         } else {
             return false;
         }
+
+        $hDir = opendir( $sFolderPath );
+
+        if ( !empty( $hDir ) ) {
+            while ( false !== ( $sFileName = readdir( $hDir ) ) ) {
+                $sFilePath = $sFolderPath . '/' . $sFileName;
+
+                if ( !in_array( $sFileName, array('.', '..', '.gitkeep', '.htaccess') ) and is_file( $sFilePath ) ) {
+
+                    // Delete a file if it is allowed to delete
+                    @unlink( $sFilePath );
+                } elseif ( $sFileName == 'smarty' and is_dir( $sFilePath ) ) {
+
+                    // Recursive call to clean Smarty temp
+                    self::cleanTmp( $sFilePath );
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

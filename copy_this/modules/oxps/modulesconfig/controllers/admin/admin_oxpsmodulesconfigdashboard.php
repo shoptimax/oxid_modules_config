@@ -17,6 +17,9 @@
 /**
  * Class Admin_oxpsModulesConfigDashboard.
  * Modules configuration export, backup and import tools controller.
+ *
+ * @todo: Add a checkbox for import force (ignores shop versions, edition and ID differences)
+ * @todo: Add checkbox for ALL sub-shops export / import.
  */
 class Admin_oxpsModulesConfigDashboard extends oxAdminView
 {

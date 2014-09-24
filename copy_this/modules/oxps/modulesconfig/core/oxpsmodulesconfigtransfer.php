@@ -17,8 +17,6 @@
 /**
  * Class oxpsModulesConfigTransfer
  * Modules configuration export, backup and import actions handler.
- *
- * @todo ddr: Refactor the class to fit 500 lines: Setting (load / save)
  */
 class oxpsModulesConfigTransfer extends oxSuperCfg
 {
