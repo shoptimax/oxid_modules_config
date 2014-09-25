@@ -30,6 +30,26 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
 
 
     /**
+     * Set import data array.
+     *
+     * @param array $aImportData
+     */
+    public function setImportData( array $aImportData )
+    {
+        $this->_aImportData = $aImportData;
+    }
+
+    /**
+     * Get import data array.
+     *
+     * @return array
+     */
+    public function getImportData()
+    {
+        return $this->_aImportData;
+    }
+
+    /**
      * Collect requested settings for selected modules, build JSON export file and pass it for download.
      *
      * @param array $aExportParameters
@@ -56,11 +76,13 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         $sBackupsPath = $this->_getBackupFolderPath();
         $sFileName    = $this->_getJsonFileName( $sBackupFileSuffix );
 
-        return file_put_contents( $sBackupsPath . $sFileName, json_encode( $aBackupData ) );
+        return $this->_jsonBackup( $sBackupsPath . $sFileName, $aBackupData );
     }
 
     /**
      * Get import data from uploaded file and set it decoded from JSON to array.
+     *
+     * @codeCoverageIgnore
      *
      * @param array $aImportFileData
      */
@@ -70,7 +92,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
             $sData = file_get_contents( $aImportFileData['tmp_name'] );
 
             if ( !empty( $sData ) ) {
-                $this->_aImportData = (array) json_decode( $sData );
+                $this->setImportData( (array) json_decode( $sData ) );
             }
         }
     }
@@ -84,7 +106,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
     {
         /** @var oxpsModulesConfigValidator $oImportDataValidator */
         $oImportDataValidator = oxRegistry::get( 'oxpsModulesConfigValidator' );
-        $oImportDataValidator->init( $this->_aImportData, $this->_getSettingsDataHeader() );
+        $oImportDataValidator->init( $this->getImportData(), $this->_getSettingsDataHeader() );
 
         return (array) $oImportDataValidator->validate();
     }
@@ -101,20 +123,21 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     public function importData( array $aParameters )
     {
-        $aImportData    = (array) reset( $this->_aImportData );
-        $aImportModules = (array) $aImportData['aModules'];
+        $aAllImportData = $this->getImportData();
+        $aImportData    = (array) reset( $aAllImportData );
 
-        foreach ( $aParameters['modules'] as $sModuleId ) {
-            if ( array_key_exists( $sModuleId, $aImportModules ) ) {
-                $aImportModule = (array) $aImportModules[$sModuleId];
-
-                foreach ( $aParameters['settings'] as $sSetting ) {
-                    $this->_setSettingValue( $sModuleId, $sSetting, $aImportModule[$sSetting] );
-                }
-            }
+        if ( !isset( $aImportData['aModules'], $aParameters['modules'], $aParameters['settings'] ) or
+             !is_array( $aParameters['modules'] ) or
+             !is_array( $aParameters['settings'] )
+        ) {
+            return false;
         }
 
-        return true;
+        return $this->_setSettingsValues(
+            (array) $aImportData['aModules'],
+            $aParameters['modules'],
+            $aParameters['settings']
+        );
     }
 
     /**
@@ -177,6 +200,35 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
     }
 
     /**
+     * Set requested settings list for each requested module from provided import data.
+     *
+     * @param array $aImportModules
+     * @param array $aRequestedModules
+     * @param array $sRequestedSettings
+     *
+     * @return bool True if at least one setting was updated, False otherwise.
+     */
+    protected function _setSettingsValues( array $aImportModules, array $aRequestedModules, array $sRequestedSettings )
+    {
+        $blSettingUpdated = false;
+
+        foreach ( $aRequestedModules as $sModuleId ) {
+            if ( array_key_exists( $sModuleId, $aImportModules ) ) {
+                $aImportModule = (array) $aImportModules[$sModuleId];
+
+                foreach ( $sRequestedSettings as $sSetting ) {
+                    if ( array_key_exists( $sSetting, $aImportModule ) ) {
+                        $this->_setSettingValue( $sModuleId, $sSetting, $aImportModule[$sSetting] );
+                        $blSettingUpdated = true;
+                    }
+                }
+            }
+        }
+
+        return $blSettingUpdated;
+    }
+
+    /**
      * Create a name for JSON export or backup file.
      *
      * @param string $sBackupSuffix Additional prefix for backup file name
@@ -223,12 +275,39 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         $sShopDirPath   = (string) $oConfig->getConfigParam( 'sShopDir' );
         $sBackupDirPath = $sShopDirPath . 'export' . DIRECTORY_SEPARATOR . 'modules_config' . DIRECTORY_SEPARATOR;
 
-        if ( !is_dir( $sBackupDirPath ) ) {
-            mkdir( $sBackupDirPath, 0777 );
-            file_put_contents( $sBackupDirPath . '.htaccess', 'deny from all' . PHP_EOL );
-        }
+        $this->_touchBackupsDir( $sBackupDirPath );
 
         return $sBackupDirPath;
+    }
+
+    /**
+     * Save data in JSON format to a backup file.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $sFullFilePath
+     * @param string $sFileData
+     *
+     * @return int
+     */
+    protected function _jsonBackup( $sFullFilePath, $sFileData )
+    {
+        return file_put_contents( $sFullFilePath, json_encode( $sFileData ) );
+    }
+
+    /**
+     * Check if folder exists, if not create it and put .htaccess file there to forbid web access.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $sFolderPath
+     */
+    protected function _touchBackupsDir( $sFolderPath )
+    {
+        if ( !is_dir( $sFolderPath ) ) {
+            mkdir( $sFolderPath, 0777 );
+            file_put_contents( $sFolderPath . '.htaccess', 'deny from all' . PHP_EOL );
+        }
     }
 
     /**

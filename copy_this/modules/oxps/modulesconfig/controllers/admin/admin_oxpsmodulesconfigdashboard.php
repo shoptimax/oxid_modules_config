@@ -20,6 +20,7 @@
  *
  * @todo: Add a checkbox for import force (ignores shop versions, edition and ID differences)
  * @todo: Add checkbox for ALL sub-shops export / import.
+ * @todo: Split class to make it fit max allowed length
  */
 class Admin_oxpsModulesConfigDashboard extends oxAdminView
 {
@@ -108,6 +109,16 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     }
 
     /**
+     * Set current action name.
+     *
+     * @param string $sAction
+     */
+    public function setAction( $sAction )
+    {
+        $this->_sAction = $sAction;
+    }
+
+    /**
      * Get current action name.
      *
      * @return string
@@ -118,6 +129,34 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     }
 
     /**
+     * Reset errors list to empty array.
+     */
+    public function resetError()
+    {
+        $this->_aErrors = array();
+    }
+
+    /**
+     * Add an error to errors list.
+     *
+     * @param string $sErrorCode
+     */
+    public function addError( $sErrorCode )
+    {
+        $this->_aErrors[] = $sErrorCode;
+    }
+
+    /**
+     * Add multiple errors to the list.
+     *
+     * @param array $aErrors
+     */
+    public function addErrors( array $aErrors )
+    {
+        $this->_aErrors = array_merge( $this->_aErrors, $aErrors );
+    }
+
+    /**
      * Get detected errors list.
      *
      * @return array
@@ -125,6 +164,16 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     public function getErrors()
     {
         return $this->_aErrors;
+    }
+
+    /**
+     * Add a message to messages list.
+     *
+     * @param string $sMessageCode
+     */
+    public function addMessage( $sMessageCode )
+    {
+        $this->_aMessages[] = $sMessageCode;
     }
 
     /**
@@ -173,9 +222,6 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
                 }
 
                 break;
-
-            default:
-                break;
         }
 
         return false;
@@ -208,7 +254,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
             $sAction = 'import';
         }
 
-        $this->_sAction = $sAction;
+        $this->setAction( $sAction );
 
         return array('modules' => $aModules, 'settings' => $aSettings, 'action' => $sAction);
     }
@@ -253,13 +299,13 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
      */
     protected function _validateRequestData( array $aData )
     {
-        $this->_aErrors = array();
+        $this->resetError();
 
         $this->_validateModulesData( $aData );
         $this->_validateSettingsData( $aData );
         $this->_validateActionData( $aData );
 
-        return empty( $this->_aErrors );
+        return !$this->getErrors();
     }
 
     /**
@@ -272,7 +318,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     protected function _validateImportData( array $aData )
     {
         if ( empty( $aData ) ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_NO_FILE';
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_NO_FILE' );
         }
 
         if ( !empty( $aData['error'] ) ) {
@@ -282,7 +328,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $this->_validateImportFile( $aData );
         $this->_validateJsonData( $aData );
 
-        return empty( $this->_aErrors );
+        return !$this->getErrors();
     }
 
     /**
@@ -293,14 +339,16 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     protected function _validateModulesData( array $aData )
     {
         if ( empty( $aData['modules'] ) or !is_array( $aData['modules'] ) ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_NO_MODULES';
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_NO_MODULES' );
+
+            return;
         }
 
         $aValidModules = $this->getModulesList();
 
         foreach ( $aData['modules'] as $sModule ) {
             if ( !array_key_exists( $sModule, $aValidModules ) ) {
-                $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_INVALID_MODULE';
+                $this->addError( 'OXPS_MODULESCONFIG_ERR_INVALID_MODULE' );
                 break;
             }
         }
@@ -314,14 +362,16 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     protected function _validateSettingsData( array $aData )
     {
         if ( empty( $aData['settings'] ) or !is_array( $aData['settings'] ) ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_NO_SETTINGS';
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_NO_SETTINGS' );
+
+            return;
         }
 
         $aValidSettings = $this->getSettingsList();
 
         foreach ( $aData['settings'] as $sSettings ) {
             if ( !array_key_exists( $sSettings, $aValidSettings ) ) {
-                $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_INVALID_SETTING';
+                $this->addError( 'OXPS_MODULESCONFIG_ERR_INVALID_SETTING' );
                 break;
             }
         }
@@ -335,7 +385,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     protected function _validateActionData( array $aData )
     {
         if ( empty( $aData['action'] ) or !in_array( $aData['action'], array('export', 'backup', 'import') ) ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_INVALID_ACTION';
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_INVALID_ACTION' );
         }
     }
 
@@ -360,7 +410,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
             $aFileUploadErrors[$iFileUploadErrorCode] :
             'OXPS_MODULESCONFIG_ERR_UPLOAD_ERROR';
 
-        $this->_aErrors[] = $sErrorCode;
+        $this->addError( $sErrorCode );
     }
 
     /**
@@ -373,12 +423,26 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         if ( empty( $aFileData['type'] ) or
              !in_array( $aFileData['type'], array('application/json', 'application/octet-stream') )
         ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_FILE_TYPE';
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_FILE_TYPE' );
         }
 
-        if ( !is_file( $aFileData['tmp_name'] ) or !is_readable( $aFileData['tmp_name'] ) ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_CANNOT_READ_FILE';
+        if ( empty( $aFileData['tmp_name'] ) or !$this->_isReadableFile( $aFileData['tmp_name'] ) ) {
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_CANNOT_READ' );
         }
+    }
+
+    /**
+     * Check if there is a readable file under a path.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $aFilePath
+     *
+     * @return bool
+     */
+    protected function _isReadableFile( $aFilePath )
+    {
+        return ( is_file( $aFilePath ) and is_readable( $aFilePath ) );
     }
 
     /**
@@ -392,7 +456,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
         $oModulesConfig->setImportDataFromFile( $aFileData );
 
-        $this->_aErrors = array_merge( $this->_aErrors, $oModulesConfig->getImportDataValidationErrors() );
+        $this->addErrors( (array) $oModulesConfig->getImportDataValidationErrors() );
     }
 
 
@@ -411,7 +475,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
         $oModulesConfig->exportForDownload( $aData );
 
-        $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_EXPORT_FAILED';
+        $this->addError( 'OXPS_MODULESCONFIG_ERR_EXPORT_FAILED' );
     }
 
     /**
@@ -426,9 +490,9 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $oModulesConfig = oxNew( 'oxpsModulesConfigTransfer' );
 
         if ( !$oModulesConfig->backupToFile( $aData, $sBackupFileSuffix ) ) {
-            $this->_aErrors[] = 'OXPS_MODULESCONFIG_ERR_BACKUP_FAILED';
+            $this->addError( 'OXPS_MODULESCONFIG_ERR_BACKUP_FAILED' );
         } else {
-            $this->_aMessages[] = 'OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS';
+            $this->addMessage( 'OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS' );
         }
     }
 
@@ -448,13 +512,13 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
         $oModulesConfig->setImportDataFromFile( $aImportData );
 
         if ( !$oModulesConfig->importData( $aRequestData ) ) {
-            $this->_aErrors = array_merge( $this->_aErrors, $oModulesConfig->getImportErrors() );
+            $this->addErrors( (array) $oModulesConfig->getImportErrors() );
         } else {
-            $this->_aMessages[] = 'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS';
+            $this->addMessage( 'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS' );
 
             /** @var oxpsModulesConfigModule $oModule */
-            $oModule = oxRegistry::get( 'oxpsModulesConfigModule' );
-            $oModule::cleanTmp();
+            $oModule = oxNew( 'oxpsModulesConfigModule' );
+            $oModule->cleanTmp();
         }
     }
 }

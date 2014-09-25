@@ -8,4 +8,4 @@ $TESTDIR/runtests.sh
 
 $TESTDIR/../../../../oxmd/src/bin/oxmd $TESTDIR/../ $TESTDIR/certification/coverage-clover.xml text \
 --reportfile-text certification/certification.txt \
---exclude tests/,vendor/
+--exclude docs/,out/,tests/,views/,core/oxpsmodulesconfigmodule.php,metadata.php

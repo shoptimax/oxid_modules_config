@@ -26,7 +26,6 @@ All relevant modules configuration is involved including: Versions, Extended cla
 - Since it is a text file, it could be also edited by hand and put under version control.
 
 ## To do and nice to have features for future releases
-- Full coverage with unit tests, acceptance tests
 - Force mode to allow importing configuration to any shop without checking versions
 - Export and import off all sub-shops data in one file
 - On new module data imported, trigger activation and rebuild views
@@ -34,3 +33,4 @@ All relevant modules configuration is involved including: Versions, Extended cla
 - Automatic restore of last backup on at least one setting import failure
 - More validation rules for import data: check if imported and selected modules intersect
 - For extended classes settings also split it by modules ID (metadata parsing needed)
+- Refactor long admin controller class

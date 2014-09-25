@@ -22,47 +22,6 @@ class oxpsModulesConfigModule extends oxModule
 {
 
     /**
-     * The module instance.
-     *
-     * @var oxpsModulesConfigModule
-     */
-    private static $_instance = null;
-
-
-    /**
-     * Class constructor.
-     * Sets main module data and load additional data.
-     */
-    function __construct( $sModuleTitle = 'OXPS Modules Config',
-                          $sModuleDescription = 'Modules configuration export and import tools' )
-    {
-        $sModuleId = 'oxpsmodulesconfig';
-
-        $this->setModuleData(
-            array(
-                'id'          => $sModuleId,
-                'title'       => $sModuleTitle,
-                'description' => $sModuleDescription,
-            )
-        );
-
-        $this->load( $sModuleId );
-
-        oxRegistry::set( 'oxpsModulesConfigModule', $this );
-    }
-
-
-    /**
-     * Returns the module instance
-     *
-     * @return oxpsModulesConfigModule
-     */
-    public static function getInstance()
-    {
-        return oxRegistry::get( 'oxpsModulesConfigModule' );
-    }
-
-    /**
      * Module activation script.
      */
     public static function onActivate()
@@ -121,50 +80,5 @@ class oxpsModulesConfigModule extends oxModule
         }
 
         return true;
-    }
-
-    /**
-     * Get translated string bt the translation code.
-     *
-     * @param string  $sCode
-     * @param boolean $blUseModulePrefix User module translations prefix or not.
-     *
-     * @return string
-     */
-    public function translate( $sCode, $blUseModulePrefix = true )
-    {
-        if ( $blUseModulePrefix ) {
-            $sCode = 'OXPS_MODULESCONFIG_' . $sCode;
-        }
-
-        return oxRegistry::getLang()->translateString( $sCode, oxRegistry::getLang()->getBaseLanguage(), false );
-    }
-
-
-    /**
-     * Get module setting value.
-     *
-     * @param string  $sModuleSettingName Module setting parameter name without module prefix.
-     * @param boolean $blUseModulePrefix  User module settings prefix or not.
-     *
-     * @return mixed
-     */
-    public function getSetting( $sModuleSettingName, $blUseModulePrefix = true )
-    {
-        if ( $blUseModulePrefix ) {
-            $sModuleSettingName = 'oxpsModulesConfig' . (string) $sModuleSettingName;
-        }
-
-        return oxRegistry::getConfig()->getConfigParam( (string) $sModuleSettingName );
-    }
-
-    /**
-     * Get module path.
-     *
-     * @return string Full path to module dir.
-     */
-    public function getPath()
-    {
-        return oxRegistry::getConfig()->getModulesDir() . 'oxps/modulesconfig/';
     }
 }

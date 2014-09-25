@@ -191,6 +191,8 @@ class oxpsModulesConfigStorage extends oxConfig
     /**
      * Load modules settings array from shop configuration.
      *
+     * @codeCoverageIgnore
+     *
      * @param string $sModuleId
      *
      * @return array
@@ -212,6 +214,8 @@ class oxpsModulesConfigStorage extends oxConfig
 
     /**
      * Load modules blocks settings array from database blocks table.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $sModuleId
      *
@@ -269,6 +273,8 @@ class oxpsModulesConfigStorage extends oxConfig
     /**
      * Update module settings in database with a settings import data.
      *
+     * @codeCoverageIgnore
+     *
      * @param string $sModuleId
      * @param array  $aSettings
      */
@@ -303,6 +309,8 @@ class oxpsModulesConfigStorage extends oxConfig
 
     /**
      * Update module blocks configuration in database with a block import data.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $sModuleId
      * @param array  $aBlocks
