@@ -34,3 +34,4 @@ All relevant modules configuration is involved including: Versions, Extended cla
 - More validation rules for import data: check if imported and selected modules intersect
 - For extended classes settings also split it by modules ID (metadata parsing needed)
 - Refactor long admin controller class
+- Add an option to export / import global CMS snippets
