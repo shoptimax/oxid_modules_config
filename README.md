@@ -26,6 +26,7 @@ All relevant modules configuration is involved including: Versions, Extended cla
 - Since it is a text file, it could be also edited by hand and put under version control.
 
 ## To do and nice to have features for future releases
+- Reformat for OXID PSR standards
 - Force mode to allow importing configuration to any shop without checking versions
 - Export and import off all sub-shops data in one file
 - On new module data imported, trigger activation and rebuild views
