@@ -26,7 +26,7 @@ class oxpsModulesConfigModule extends oxModule
      */
     public static function onActivate()
     {
-        self::cleanTmp();
+        self::clearTmp();
     }
 
     /**
@@ -34,51 +34,69 @@ class oxpsModulesConfigModule extends oxModule
      */
     public static function onDeactivate()
     {
-        self::cleanTmp();
+        self::clearTmp();
     }
 
     /**
-     * Delete cache files.
+     * Clean cache folder content.
      *
-     * @return bool
+     * @param string $sClearFolderPath Sub-folder path to delete from. Should be a full, valid path inside temp folder.
+     *
+     * @return boolean
      */
-    public static function cleanTmp( $sClearFolderPath = '' )
+    public static function clearTmp($sClearFolderPath = '')
     {
-        $sTempFolderPath = oxRegistry::getConfig()->getConfigParam( 'sCompileDir' );
+        $sFolderPath = self::_getFolderToClear($sClearFolderPath);
+        $hDirHandler = opendir($sFolderPath);
 
-        if ( !empty( $sClearFolderPath ) and
-             ( strpos( $sClearFolderPath, $sTempFolderPath ) !== false ) and
-             is_dir( $sClearFolderPath )
-        ) {
-
-            // User argument folder path to delete from
-            $sFolderPath = $sClearFolderPath;
-        } elseif ( empty( $sClearFolderPath ) ) {
-
-            // Use temp folder path from settings
-            $sFolderPath = $sTempFolderPath;
-        } else {
-            return false;
-        }
-
-        $hDir = opendir( $sFolderPath );
-
-        if ( !empty( $hDir ) ) {
-            while ( false !== ( $sFileName = readdir( $hDir ) ) ) {
-                $sFilePath = $sFolderPath . '/' . $sFileName;
-
-                if ( !in_array( $sFileName, array('.', '..', '.gitkeep', '.htaccess') ) and is_file( $sFilePath ) ) {
-
-                    // Delete a file if it is allowed to delete
-                    @unlink( $sFilePath );
-                } elseif ( $sFileName == 'smarty' and is_dir( $sFilePath ) ) {
-
-                    // Recursive call to clean Smarty temp
-                    self::cleanTmp( $sFilePath );
-                }
+        if (!empty($hDirHandler)) {
+            while (false !== ($sFileName = readdir($hDirHandler))) {
+                $sFilePath = $sFolderPath . DIRECTORY_SEPARATOR . $sFileName;
+                self::_clear($sFileName, $sFilePath);
             }
+
+            closedir($hDirHandler);
         }
 
         return true;
+    }
+
+
+    /**
+     * Check if provided path is inside eShop tpm/ folder or user the tmp/ folder path.
+     *
+     * @param string $sClearFolderPath
+     *
+     * @return string
+     */
+    protected static function _getFolderToClear($sClearFolderPath = '')
+    {
+        $sTempFolderPath = (string) oxRegistry::getConfig()->getConfigParam('sCompileDir');
+
+        if (!empty($sClearFolderPath) and (strpos($sClearFolderPath, $sTempFolderPath) !== false)) {
+            $sFolderPath = $sClearFolderPath;
+        } else {
+            $sFolderPath = $sTempFolderPath;
+        }
+
+        return $sFolderPath;
+    }
+
+    /**
+     * Check if resource could be deleted,
+     * delete it if it's a file or call recursive folder deletion if it is a directory.
+     *
+     * @param string $sFileName
+     * @param string $sFilePath
+     */
+    protected static function _clear($sFileName, $sFilePath)
+    {
+        if (!in_array($sFileName, array('.', '..', '.gitkeep', '.htaccess'))) {
+            if (is_file($sFilePath)) {
+                @unlink($sFilePath);
+            } else {
+                self::clearTmp($sFilePath);
+            }
+        }
     }
 }

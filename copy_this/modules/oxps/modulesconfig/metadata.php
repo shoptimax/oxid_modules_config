@@ -24,16 +24,13 @@ $sMetadataVersion = '1.1';
  */
 $aModule = array(
     'id'          => 'oxpsmodulesconfig',
-    'title'       => array(
-        'de' => '[TR - OXPS Modules Config]',
-        'en' => 'OXPS Modules Config',
-    ),
+    'title'       => 'Modules Config',
     'description' => array(
-        'de' => '[TR - Modules configuration export and import tools]',
-        'en' => 'Modules configuration export and import tools',
+        'de' => '[TR - Modules configuration export, backup and import tools]',
+        'en' => 'Modules configuration export, backup and import tools',
     ),
     'thumbnail'   => 'out/pictures/picture.png',
-    'version'     => '0.1.0',
+    'version'     => '0.1.1',
     'author'      => 'OXID Professional Services',
     'url'         => 'http://www.oxid-esales.com',
     'email'       => 'info@oxid-esales.com',

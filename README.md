@@ -1,4 +1,4 @@
-# OXPS Modules Config
+# Modules Config
 
 ----
 

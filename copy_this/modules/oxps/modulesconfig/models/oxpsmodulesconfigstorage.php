@@ -47,11 +47,11 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return mixed
      */
-    public function load( $sModuleId, $sSetting )
+    public function load($sModuleId, $sSetting)
     {
-        list( $sSettingOrigin, $sSettingKey ) = $this->_mapSetting( $sSetting );
+        list($sSettingOrigin, $sSettingKey) = $this->_mapSetting($sSetting);
 
-        return $this->_load( $sModuleId, $sSettingOrigin, $sSettingKey );
+        return $this->_load($sModuleId, $sSettingOrigin, $sSettingKey);
     }
 
     /**
@@ -61,11 +61,11 @@ class oxpsModulesConfigStorage extends oxConfig
      * @param string $sSetting  Setting name as a key from module metadata file.
      * @param mixed  $mValue    A new value(s) to set.
      */
-    public function save( $sModuleId, $sSetting, $mValue )
+    public function save($sModuleId, $sSetting, $mValue)
     {
-        list( $sSettingOrigin, $sSettingKey ) = $this->_mapSetting( $sSetting );
+        list($sSettingOrigin, $sSettingKey) = $this->_mapSetting($sSetting);
 
-        $this->_save( $sModuleId, $sSettingOrigin, $sSettingKey, $mValue );
+        $this->_save($sModuleId, $sSettingOrigin, $sSettingKey, $mValue);
     }
 
 
@@ -76,9 +76,9 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return array
      */
-    protected function _mapSetting( $sSetting )
+    protected function _mapSetting($sSetting)
     {
-        if ( !array_key_exists( $sSetting, $this->_settingsMap ) ) {
+        if (!array_key_exists($sSetting, $this->_settingsMap)) {
             return array('', '');
         }
 
@@ -94,23 +94,23 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return mixed
      */
-    protected function _load( $sModuleId, $sSettingOrigin, $sSettingKey )
+    protected function _load($sModuleId, $sSettingOrigin, $sSettingKey)
     {
-        switch ( $sSettingOrigin ) {
+        switch ($sSettingOrigin) {
             case 'oxConfig':
-                $mSetting = $this->_loadFromShopConfig( $sModuleId, $sSettingKey );
+                $mSetting = $this->_loadFromShopConfig($sModuleId, $sSettingKey);
                 break;
 
             case 'oxConfig-Global':
-                $mSetting = $this->_loadFromShopConfigAndSeparate( $sModuleId, $sSettingKey );
+                $mSetting = $this->_loadFromShopConfigAndSeparate($sModuleId, $sSettingKey);
                 break;
 
             case 'oxConfig-List':
-                $mSetting = $this->_loadListFromShopConfig( $sModuleId );
+                $mSetting = $this->_loadListFromShopConfig($sModuleId);
                 break;
 
             case 'oxtplblocks':
-                $mSetting = $this->_loadFromBlocksTable( $sModuleId );
+                $mSetting = $this->_loadFromBlocksTable($sModuleId);
                 break;
 
             default:
@@ -130,23 +130,23 @@ class oxpsModulesConfigStorage extends oxConfig
      * @param string $sSettingKey    A key that defines setting in its storage location.
      * @param mixed  $mValue         A new value(s) to set.
      */
-    protected function _save( $sModuleId, $sSettingOrigin, $sSettingKey, $mValue )
+    protected function _save($sModuleId, $sSettingOrigin, $sSettingKey, $mValue)
     {
-        switch ( $sSettingOrigin ) {
+        switch ($sSettingOrigin) {
             case 'oxConfig':
-                $this->_saveToShopConfig( $sModuleId, $sSettingKey, $mValue );
+                $this->_saveToShopConfig($sModuleId, $sSettingKey, $mValue);
                 break;
 
             case 'oxConfig-Global':
-                $this->_saveToShopConfigMerged( $sModuleId, $sSettingKey, (array) $mValue );
+                $this->_saveToShopConfigMerged($sModuleId, $sSettingKey, (array) $mValue);
                 break;
 
             case 'oxConfig-List':
-                $this->_saveModuleSettings( $sModuleId, (array) $mValue );
+                $this->_saveModuleSettings($sModuleId, (array) $mValue);
                 break;
 
             case 'oxtplblocks':
-                $this->_saveModuleBlocks( $sModuleId, (array) $mValue );
+                $this->_saveModuleBlocks($sModuleId, (array) $mValue);
                 break;
 
             default:
@@ -162,11 +162,11 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return mixed
      */
-    protected function _loadFromShopConfig( $sModuleId, $sSettingKey )
+    protected function _loadFromShopConfig($sModuleId, $sSettingKey)
     {
-        $mAllSettings = $this->getShopConfVar( $sSettingKey );
+        $mAllSettings = $this->getShopConfVar($sSettingKey);
 
-        if ( is_array( $mAllSettings ) and array_key_exists( $sModuleId, $mAllSettings ) ) {
+        if (is_array($mAllSettings) and array_key_exists($sModuleId, $mAllSettings)) {
             return $mAllSettings[$sModuleId];
         }
 
@@ -183,9 +183,9 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return array
      */
-    protected function _loadFromShopConfigAndSeparate( $sModuleId, $sSettingKey )
+    protected function _loadFromShopConfigAndSeparate($sModuleId, $sSettingKey)
     {
-        return (array) $this->getShopConfVar( $sSettingKey );
+        return (array) $this->getShopConfVar($sSettingKey);
     }
 
     /**
@@ -197,17 +197,17 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return array
      */
-    protected function _loadListFromShopConfig( $sModuleId )
+    protected function _loadListFromShopConfig($sModuleId)
     {
-        $oDb = oxDb::getDb( oxdb::FETCH_MODE_ASSOC );
+        $oDb = oxDb::getDb(oxdb::FETCH_MODE_ASSOC);
 
         return (array) $oDb->getArray(
             sprintf(
                 "SELECT `OXVARNAME`, `OXVARTYPE`, %s AS `OXVARVALUE` FROM `oxconfig` " .
                 "WHERE `OXSHOPID` = %s AND `OXMODULE` = %s",
                 $this->getDecodeValueQuery(),
-                $oDb->quote( $this->getShopId() ),
-                $oDb->quote( sprintf( "module:%s", $sModuleId ) )
+                $oDb->quote($this->getShopId()),
+                $oDb->quote(sprintf("module:%s", $sModuleId))
             )
         );
     }
@@ -221,16 +221,16 @@ class oxpsModulesConfigStorage extends oxConfig
      *
      * @return array
      */
-    protected function _loadFromBlocksTable( $sModuleId )
+    protected function _loadFromBlocksTable($sModuleId)
     {
-        $oDb = oxDb::getDb( oxdb::FETCH_MODE_ASSOC );
+        $oDb = oxDb::getDb(oxdb::FETCH_MODE_ASSOC);
 
         return (array) $oDb->getArray(
             sprintf(
                 "SELECT `OXACTIVE`, `OXTEMPLATE`, `OXBLOCKNAME`, `OXPOS`, `OXFILE` FROM `oxtplblocks` " .
                 "WHERE `OXSHOPID` = %s AND `OXMODULE` = %s",
-                $oDb->quote( $this->getShopId() ),
-                $oDb->quote( $sModuleId )
+                $oDb->quote($this->getShopId()),
+                $oDb->quote($sModuleId)
             )
         );
     }
@@ -243,15 +243,15 @@ class oxpsModulesConfigStorage extends oxConfig
      * @param string $sSettingKey
      * @param mixed  $mSettings
      */
-    protected function _saveToShopConfig( $sModuleId, $sSettingKey, $mSettings )
+    protected function _saveToShopConfig($sModuleId, $sSettingKey, $mSettings)
     {
-        $mAllSettings = $this->getShopConfVar( $sSettingKey );
+        $mAllSettings = $this->getShopConfVar($sSettingKey);
 
-        $mAllSettings[$sModuleId] = ( $sSettingKey === 'aModuleVersions' )
+        $mAllSettings[$sModuleId] = ($sSettingKey === 'aModuleVersions')
             ? (string) $mSettings
             : (array) $mSettings;
 
-        $this->saveShopConfVar( 'arr', $sSettingKey, $mAllSettings );
+        $this->saveShopConfVar('arr', $sSettingKey, $mAllSettings);
     }
 
     /**
@@ -265,9 +265,9 @@ class oxpsModulesConfigStorage extends oxConfig
      * @param string $sSettingKey
      * @param array  $aSettings
      */
-    protected function _saveToShopConfigMerged( $sModuleId, $sSettingKey, array $aSettings )
+    protected function _saveToShopConfigMerged($sModuleId, $sSettingKey, array $aSettings)
     {
-        $this->saveShopConfVar( 'arr', $sSettingKey, $aSettings );
+        $this->saveShopConfVar('arr', $sSettingKey, $aSettings);
     }
 
     /**
@@ -278,7 +278,7 @@ class oxpsModulesConfigStorage extends oxConfig
      * @param string $sModuleId
      * @param array  $aSettings
      */
-    protected function _saveModuleSettings( $sModuleId, array $aSettings )
+    protected function _saveModuleSettings($sModuleId, array $aSettings)
     {
         $oDb = oxDb::getDb();
 
@@ -286,14 +286,14 @@ class oxpsModulesConfigStorage extends oxConfig
         $oDb->execute(
             sprintf(
                 "DELETE FROM `oxconfig` WHERE `OXSHOPID` = %s AND `OXMODULE` = %s",
-                $oDb->quote( $this->getShopId() ),
-                $oDb->quote( sprintf( 'module:%s', $sModuleId ) )
+                $oDb->quote($this->getShopId()),
+                $oDb->quote(sprintf('module:%s', $sModuleId))
             )
         );
 
         // Save module settings from import data to database
-        foreach ( $aSettings as $aSetting ) {
-            if ( !isset( $aSetting->OXVARTYPE, $aSetting->OXVARNAME, $aSetting->OXVARVALUE ) ) {
+        foreach ($aSettings as $aSetting) {
+            if (!isset($aSetting->OXVARTYPE, $aSetting->OXVARNAME, $aSetting->OXVARVALUE)) {
                 continue;
             }
 
@@ -302,7 +302,7 @@ class oxpsModulesConfigStorage extends oxConfig
                 $aSetting->OXVARNAME,
                 $aSetting->OXVARVALUE,
                 null,
-                sprintf( 'module:%s', $sModuleId )
+                sprintf('module:%s', $sModuleId)
             );
         }
     }
@@ -315,10 +315,10 @@ class oxpsModulesConfigStorage extends oxConfig
      * @param string $sModuleId
      * @param array  $aBlocks
      */
-    protected function _saveModuleBlocks( $sModuleId, array $aBlocks )
+    protected function _saveModuleBlocks($sModuleId, array $aBlocks)
     {
         /** @var oxUtilsObject $oObjectUtils */
-        $oObjectUtils = oxRegistry::get( 'oxUtilsObject' );
+        $oObjectUtils = oxRegistry::get('oxUtilsObject');
 
         $oDb = oxDb::getDb();
 
@@ -326,33 +326,33 @@ class oxpsModulesConfigStorage extends oxConfig
         $oDb->execute(
             sprintf(
                 "DELETE FROM `oxtplblocks` WHERE `OXSHOPID` = %s AND `OXMODULE` = %s",
-                $oDb->quote( $this->getShopId() ),
-                $oDb->quote( $sModuleId )
+                $oDb->quote($this->getShopId()),
+                $oDb->quote($sModuleId)
             )
         );
 
         // Collect and insert blocks data to database
         $aInsertBlocks = array();
 
-        foreach ( $aBlocks as $aBlock ) {
+        foreach ($aBlocks as $aBlock) {
             $aInsertBlocks[] = sprintf(
                 "(%s, %d, %s, %s, %s, %d, %s, %s)",
-                $oDb->quote( $oObjectUtils->generateUId() ),
+                $oDb->quote($oObjectUtils->generateUId()),
                 (int) (bool) $aBlock->OXACTIVE,
-                $oDb->quote( $this->getShopId() ),
-                $oDb->quote( $aBlock->OXTEMPLATE ),
-                $oDb->quote( $aBlock->OXBLOCKNAME ),
+                $oDb->quote($this->getShopId()),
+                $oDb->quote($aBlock->OXTEMPLATE),
+                $oDb->quote($aBlock->OXBLOCKNAME),
                 (int) $aBlock->OXPOS,
-                $oDb->quote( $aBlock->OXFILE ),
-                $oDb->quote( $sModuleId )
+                $oDb->quote($aBlock->OXFILE),
+                $oDb->quote($sModuleId)
             );
         }
 
-        if ( !empty( $aInsertBlocks ) ) {
+        if (!empty($aInsertBlocks)) {
             $oDb->execute(
                 "INSERT INTO `oxtplblocks` " .
                 "(`OXID`, `OXACTIVE`, `OXSHOPID`, `OXTEMPLATE`, `OXBLOCKNAME`, `OXPOS`, `OXFILE`, `OXMODULE`) " .
-                "VALUES " . implode( ", ", $aInsertBlocks )
+                "VALUES " . implode(", ", $aInsertBlocks)
             );
         }
     }

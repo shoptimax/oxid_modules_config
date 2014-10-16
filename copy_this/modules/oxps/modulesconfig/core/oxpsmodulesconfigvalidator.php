@@ -41,9 +41,9 @@ class oxpsModulesConfigValidator extends oxSuperCfg
      * @param array $aImportData
      * @param array $aSettingsDataHeader
      */
-    public function init( array $aImportData, array $aSettingsDataHeader )
+    public function init(array $aImportData, array $aSettingsDataHeader)
     {
-        $this->_aImportData         = $aImportData;
+        $this->_aImportData = $aImportData;
         $this->_aSettingsDataHeader = $aSettingsDataHeader;
     }
 
@@ -61,10 +61,10 @@ class oxpsModulesConfigValidator extends oxSuperCfg
             '_validateImportDataSettingsValid',
         );
 
-        foreach ( $aValidationMethods as $sValidationMethod ) {
+        foreach ($aValidationMethods as $sValidationMethod) {
             $aErrors = (array) $this->$sValidationMethod();
 
-            if ( !empty( $aErrors ) ) {
+            if (!empty($aErrors)) {
                 return $aErrors;
             }
         }
@@ -80,7 +80,7 @@ class oxpsModulesConfigValidator extends oxSuperCfg
      */
     protected function _validateImportDataNotEmpty()
     {
-        if ( empty( $this->_aImportData ) ) {
+        if (empty($this->_aImportData)) {
             return array('OXPS_MODULESCONFIG_ERR_EMPTY_DATA');
         }
 
@@ -94,8 +94,8 @@ class oxpsModulesConfigValidator extends oxSuperCfg
      */
     protected function _validateImportDataFormat()
     {
-        if ( array_keys( $this->_aSettingsDataHeader ) !== array_keys( $this->_aImportData ) or
-             array_keys( reset( $this->_aSettingsDataHeader ) ) !== array_keys( (array) reset( $this->_aImportData ) )
+        if (array_keys($this->_aSettingsDataHeader) !== array_keys($this->_aImportData) or
+            array_keys(reset($this->_aSettingsDataHeader)) !== array_keys((array) reset($this->_aImportData))
         ) {
             return array('OXPS_MODULESCONFIG_ERR_INVALID_FORMAT');
         }
@@ -114,18 +114,18 @@ class oxpsModulesConfigValidator extends oxSuperCfg
     {
         $aErrors = array();
 
-        $aCurrentShopData = reset( $this->_aSettingsDataHeader );
-        $aImportFileData  = (array) reset( $this->_aImportData );
+        $aCurrentShopData = reset($this->_aSettingsDataHeader);
+        $aImportFileData = (array) reset($this->_aImportData);
 
-        if ( $aCurrentShopData['sShopVersion'] !== $aImportFileData['sShopVersion'] ) {
+        if ($aCurrentShopData['sShopVersion'] !== $aImportFileData['sShopVersion']) {
             $aErrors[] = 'OXPS_MODULESCONFIG_ERR_SHOP_VERSION';
         }
 
-        if ( $aCurrentShopData['sShopEdition'] !== $aImportFileData['sShopEdition'] ) {
+        if ($aCurrentShopData['sShopEdition'] !== $aImportFileData['sShopEdition']) {
             $aErrors[] = 'OXPS_MODULESCONFIG_ERR_SHOP_EDITION';
         }
 
-        if ( $aCurrentShopData['sShopId'] !== $aImportFileData['sShopId'] ) {
+        if ($aCurrentShopData['sShopId'] !== $aImportFileData['sShopId']) {
             $aErrors[] = 'OXPS_MODULESCONFIG_ERR_WRONG_SUBSHOP';
         }
 

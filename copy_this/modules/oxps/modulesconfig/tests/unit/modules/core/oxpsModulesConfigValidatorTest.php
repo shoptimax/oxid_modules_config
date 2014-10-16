@@ -38,7 +38,7 @@ class oxpsModulesConfigValidatorTest extends OxidTestCase
     {
         parent::setUp();
 
-        $this->SUT = $this->getMock( 'oxpsModulesConfigValidator', array('__call') );
+        $this->SUT = $this->getMock('oxpsModulesConfigValidator', array('__call'));
     }
 
     /**
@@ -145,16 +145,16 @@ class oxpsModulesConfigValidatorTest extends OxidTestCase
     /**
      * @dataProvider modulesConfigurationValidationDataProvider
      */
-    public function testValidate( array $aImportData, array $aSettingsDataHeader, array $aExpectedErrors )
+    public function testValidate(array $aImportData, array $aSettingsDataHeader, array $aExpectedErrors)
     {
-        $this->SUT->init( $aImportData, $aSettingsDataHeader );
+        $this->SUT->init($aImportData, $aSettingsDataHeader);
 
-        $this->assertSame( $aExpectedErrors, $this->SUT->validate() );
+        $this->assertSame($aExpectedErrors, $this->SUT->validate());
     }
 
     public function testValidate_nothingInitialized_returnEmptyDataError()
     {
-        $this->assertSame( array('OXPS_MODULESCONFIG_ERR_EMPTY_DATA'), $this->SUT->validate() );
+        $this->assertSame(array('OXPS_MODULESCONFIG_ERR_EMPTY_DATA'), $this->SUT->validate());
     }
 
     public function testValidate_noSettingHeaderInitialized_returnInvalidFormatError()
@@ -171,6 +171,6 @@ class oxpsModulesConfigValidatorTest extends OxidTestCase
             array()
         );
 
-        $this->assertSame( array('OXPS_MODULESCONFIG_ERR_INVALID_FORMAT'), $this->SUT->validate() );
+        $this->assertSame(array('OXPS_MODULESCONFIG_ERR_INVALID_FORMAT'), $this->SUT->validate());
     }
 }

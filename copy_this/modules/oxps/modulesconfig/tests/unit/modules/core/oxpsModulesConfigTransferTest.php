@@ -152,37 +152,37 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
 
     public function testGetImportData_nothingSet_returnEmptyArray()
     {
-        $this->assertSame( array(), $this->SUT->getImportData() );
+        $this->assertSame(array(), $this->SUT->getImportData());
     }
 
     public function testGetImportData_importDataSet_returnTheData()
     {
-        $this->SUT->setImportData( array('_my_import_data' => array('some_data')) );
+        $this->SUT->setImportData(array('_my_import_data' => array('some_data')));
 
-        $this->assertSame( array('_my_import_data' => array('some_data')), $this->SUT->getImportData() );
+        $this->assertSame(array('_my_import_data' => array('some_data')), $this->SUT->getImportData());
     }
 
 
     /**
      * @dataProvider exportDataProvider
      */
-    public function testExportForDownload( array $aRequestData, array $aExpectedModulesExportData )
+    public function testExportForDownload(array $aRequestData, array $aExpectedModulesExportData)
     {
         // Config mock
-        $oConfig = $this->getMock( 'oxConfig', array('getVersion', 'getEdition', 'getShopId') );
-        $oConfig->expects( $this->once() )->method( 'getVersion' )->will( $this->returnValue( '5.2.0' ) );
-        $oConfig->expects( $this->once() )->method( 'getEdition' )->will( $this->returnValue( 'PE' ) );
-        $oConfig->expects( $this->once() )->method( 'getShopId' )->will( $this->returnValue( 2 ) );
+        $oConfig = $this->getMock('oxConfig', array('getVersion', 'getEdition', 'getShopId'));
+        $oConfig->expects($this->once())->method('getVersion')->will($this->returnValue('5.2.0'));
+        $oConfig->expects($this->once())->method('getEdition')->will($this->returnValue('PE'));
+        $oConfig->expects($this->once())->method('getShopId')->will($this->returnValue(2));
 
         // Configuration storage mock
-        $oConfigStorage = $this->getMock( 'oxpsModulesConfigStorage', array('__call', 'load') );
-        $oConfigStorage->expects( $this->any() )->method( 'load' )->will( $this->returnValue( '_SETTING_' ) );
+        $oConfigStorage = $this->getMock('oxpsModulesConfigStorage', array('__call', 'load'));
+        $oConfigStorage->expects($this->any())->method('load')->will($this->returnValue('_SETTING_'));
 
-        oxRegistry::set( 'oxpsModulesConfigStorage', $oConfigStorage );
+        oxRegistry::set('oxpsModulesConfigStorage', $oConfigStorage);
 
-        $this->SUT->expects( $this->once() )->method( 'getConfig' )->will( $this->returnValue( $oConfig ) );
-        $this->SUT->expects( $this->once() )->method( '_jsonDownload' )->with(
-            $this->stringEndsWith( '.json' ),
+        $this->SUT->expects($this->once())->method('getConfig')->will($this->returnValue($oConfig));
+        $this->SUT->expects($this->once())->method('_jsonDownload')->with(
+            $this->stringEndsWith('.json'),
             $this->equalTo(
                 array(
                     '_OXID_ESHOP_MODULES_CONFIGURATION_' => array(
@@ -195,34 +195,34 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
             )
         );
 
-        $this->SUT->exportForDownload( $aRequestData );
+        $this->SUT->exportForDownload($aRequestData);
     }
 
 
     public function testBackupToFile()
     {
         // Config mock
-        $oConfig = $this->getMock( 'oxConfig', array('getVersion', 'getEdition', 'getShopId') );
-        $oConfig->expects( $this->once() )->method( 'getVersion' )->will( $this->returnValue( '5.1.0' ) );
-        $oConfig->expects( $this->once() )->method( 'getEdition' )->will( $this->returnValue( 'EE' ) );
-        $oConfig->expects( $this->once() )->method( 'getShopId' )->will( $this->returnValue( 1 ) );
-        modConfig::getInstance()->setConfigParam( 'sShopDir', '/var/www/my_shop/' );
+        $oConfig = $this->getMock('oxConfig', array('getVersion', 'getEdition', 'getShopId'));
+        $oConfig->expects($this->once())->method('getVersion')->will($this->returnValue('5.1.0'));
+        $oConfig->expects($this->once())->method('getEdition')->will($this->returnValue('EE'));
+        $oConfig->expects($this->once())->method('getShopId')->will($this->returnValue(1));
+        modConfig::getInstance()->setConfigParam('sShopDir', '/var/www/my_shop/');
 
         // Configuration storage mock
-        $oConfigStorage = $this->getMock( 'oxpsModulesConfigStorage', array('__call', 'load') );
-        $oConfigStorage->expects( $this->at( 0 ) )->method( 'load' )->with( 'mymodule', 'version' )->will(
-            $this->returnValue( '1.1.0' )
+        $oConfigStorage = $this->getMock('oxpsModulesConfigStorage', array('__call', 'load'));
+        $oConfigStorage->expects($this->at(0))->method('load')->with('mymodule', 'version')->will(
+            $this->returnValue('1.1.0')
         );
-        $oConfigStorage->expects( $this->at( 1 ) )->method( 'load' )->with( 'mymodule', 'extend' )->will(
-            $this->returnValue( array() )
+        $oConfigStorage->expects($this->at(1))->method('load')->with('mymodule', 'extend')->will(
+            $this->returnValue(array())
         );
-        $oConfigStorage->expects( $this->at( 2 ) )->method( 'load' )->with( 'mymodule', 'files' )->will(
-            $this->returnValue( array('mymoduleitem' => 'my/module/models/mymoduleitem.php') )
+        $oConfigStorage->expects($this->at(2))->method('load')->with('mymodule', 'files')->will(
+            $this->returnValue(array('mymoduleitem' => 'my/module/models/mymoduleitem.php'))
         );
-        $oConfigStorage->expects( $this->at( 3 ) )->method( 'load' )->with( 'othermodule', 'version' )->will(
-            $this->returnValue( '0.1.0' )
+        $oConfigStorage->expects($this->at(3))->method('load')->with('othermodule', 'version')->will(
+            $this->returnValue('0.1.0')
         );
-        $oConfigStorage->expects( $this->at( 4 ) )->method( 'load' )->with( 'othermodule', 'extend' )->will(
+        $oConfigStorage->expects($this->at(4))->method('load')->with('othermodule', 'extend')->will(
             $this->returnValue(
                 array(
                     'basket'    => 'other/module/controllers/othermodulebasket',
@@ -230,19 +230,19 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
                 )
             )
         );
-        $oConfigStorage->expects( $this->at( 5 ) )->method( 'load' )->with( 'othermodule', 'files' )->will(
-            $this->returnValue( array() )
+        $oConfigStorage->expects($this->at(5))->method('load')->with('othermodule', 'files')->will(
+            $this->returnValue(array())
         );
 
-        oxRegistry::set( 'oxpsModulesConfigStorage', $oConfigStorage );
+        oxRegistry::set('oxpsModulesConfigStorage', $oConfigStorage);
 
-        $this->SUT->expects( $this->exactly( 2 ) )->method( 'getConfig' )->will( $this->returnValue( $oConfig ) );
-        $this->SUT->expects( $this->never() )->method( '_jsonDownload' );
-        $this->SUT->expects( $this->once() )->method( '_touchBackupsDir' )->with(
+        $this->SUT->expects($this->exactly(2))->method('getConfig')->will($this->returnValue($oConfig));
+        $this->SUT->expects($this->never())->method('_jsonDownload');
+        $this->SUT->expects($this->once())->method('_touchBackupsDir')->with(
             '/var/www/my_shop/export/modules_config/'
         );
-        $this->SUT->expects( $this->once() )->method( '_jsonBackup' )->with(
-            $this->stringEndsWith( '.my_backup.json' ),
+        $this->SUT->expects($this->once())->method('_jsonBackup')->with(
+            $this->stringEndsWith('.my_backup.json'),
             $this->equalTo(
                 array(
                     '_OXID_ESHOP_MODULES_CONFIGURATION_' => array(
@@ -267,7 +267,7 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
                     )
                 )
             )
-        )->will( $this->returnValue( 888 ) );
+        )->will($this->returnValue(888));
 
         $this->assertSame(
             888,
@@ -285,15 +285,15 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
     public function testGetImportDataValidationErrors()
     {
         // Config mock
-        $oConfig = $this->getMock( 'oxConfig', array('getVersion', 'getEdition', 'getShopId') );
-        $oConfig->expects( $this->once() )->method( 'getVersion' )->will( $this->returnValue( '4.8.0' ) );
-        $oConfig->expects( $this->once() )->method( 'getEdition' )->will( $this->returnValue( 'CE' ) );
-        $oConfig->expects( $this->once() )->method( 'getShopId' )->will( $this->returnValue( 1 ) );
+        $oConfig = $this->getMock('oxConfig', array('getVersion', 'getEdition', 'getShopId'));
+        $oConfig->expects($this->once())->method('getVersion')->will($this->returnValue('4.8.0'));
+        $oConfig->expects($this->once())->method('getEdition')->will($this->returnValue('CE'));
+        $oConfig->expects($this->once())->method('getShopId')->will($this->returnValue(1));
 
         // Import data validator mock
         /** @var oxpsModulesConfigValidator $oValidator */
-        $oValidator = $this->getMock( 'oxpsModulesConfigValidator', array('__call', 'init', 'validate') );
-        $oValidator->expects( $this->once() )->method( 'init' )->with(
+        $oValidator = $this->getMock('oxpsModulesConfigValidator', array('__call', 'init', 'validate'));
+        $oValidator->expects($this->once())->method('init')->with(
             array(
                 '_OXID_ESHOP_MODULES_CONFIGURATION_' => array(
                     'sShopVersion' => '5.2.0',
@@ -311,13 +311,13 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
                 )
             )
         );
-        $oValidator->expects( $this->once() )->method( 'validate' )->will(
-            $this->returnValue( array('ERR_SHOP_VERSION_WRONG', 'ERR_SHOP_EDITION_WRONG') )
+        $oValidator->expects($this->once())->method('validate')->will(
+            $this->returnValue(array('ERR_SHOP_VERSION_WRONG', 'ERR_SHOP_EDITION_WRONG'))
         );
 
-        oxRegistry::set( 'oxpsModulesConfigValidator', $oValidator );
+        oxRegistry::set('oxpsModulesConfigValidator', $oValidator);
 
-        $this->SUT->expects( $this->once() )->method( 'getConfig' )->will( $this->returnValue( $oConfig ) );
+        $this->SUT->expects($this->once())->method('getConfig')->will($this->returnValue($oConfig));
         $this->SUT->setImportData(
             array(
                 '_OXID_ESHOP_MODULES_CONFIGURATION_' => array(
@@ -344,32 +344,32 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
     )
     {
         // Configuration storage mock
-        $oConfigStorage = $this->getMock( 'oxpsModulesConfigStorage', array('__call', 'save') );
-        $oConfigStorage->expects( $this->never() )->method( 'save' );
+        $oConfigStorage = $this->getMock('oxpsModulesConfigStorage', array('__call', 'save'));
+        $oConfigStorage->expects($this->never())->method('save');
 
-        oxRegistry::set( 'oxpsModulesConfigStorage', $oConfigStorage );
+        oxRegistry::set('oxpsModulesConfigStorage', $oConfigStorage);
 
-        $this->SUT->setImportData( $aImportData );
+        $this->SUT->setImportData($aImportData);
 
-        $this->assertFalse( $this->SUT->importData( $aRequestData ) );
+        $this->assertFalse($this->SUT->importData($aRequestData));
     }
 
     public function testImportData_importAndRequestDataMatch_returnTrueAndUpdateConfigurationWithRequestedImportData()
     {
         // Configuration storage mock
-        $oConfigStorage = $this->getMock( 'oxpsModulesConfigStorage', array('__call', 'save') );
-        $oConfigStorage->expects( $this->at( 0 ) )->method( 'save' )->with(
+        $oConfigStorage = $this->getMock('oxpsModulesConfigStorage', array('__call', 'save'));
+        $oConfigStorage->expects($this->at(0))->method('save')->with(
             'my_module',
             'files',
             array('class' => 'my/module/class')
         );
-        $oConfigStorage->expects( $this->at( 1 ) )->method( 'save' )->with(
+        $oConfigStorage->expects($this->at(1))->method('save')->with(
             'other_module',
             'version',
             '8.0.1'
         );
 
-        oxRegistry::set( 'oxpsModulesConfigStorage', $oConfigStorage );
+        oxRegistry::set('oxpsModulesConfigStorage', $oConfigStorage);
 
         $this->SUT->setImportData(
             array(
@@ -404,6 +404,6 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
 
     public function testGetImportErrors()
     {
-        $this->assertSame( array(), $this->SUT->getImportErrors(), 'No import errors are checked in this version.' );
+        $this->assertSame(array(), $this->SUT->getImportErrors(), 'No import errors are checked in this version.');
     }
 }

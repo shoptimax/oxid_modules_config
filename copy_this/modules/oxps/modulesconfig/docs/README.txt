@@ -1,5 +1,5 @@
 ==Title==
-OXPS Modules Config
+Modules Config
 
 ==Author==
 OXID Professional Services
@@ -11,7 +11,7 @@ oxps
 5.1.x/4.8.x-5.2.x/4.9.x
 
 ==Version==
-0.1.0
+0.1.1
 
 ==Link==
 http://www.oxid-esales.com
@@ -20,7 +20,7 @@ http://www.oxid-esales.com
 info@oxid-esales.com
 
 ==Description==
-Modules configuration export and import tools
+Modules configuration export, backup and import tools
 
 ==Installation==
 Activate the module in administration area.
