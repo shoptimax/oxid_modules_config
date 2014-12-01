@@ -56,7 +56,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     public function exportForDownload(array $aExportParameters)
     {
-        $aExportData = $this->_getSettingsData($aExportParameters);
+        $aExportData = (array) $this->_getSettingsData($aExportParameters);
         $sFileName = $this->_getJsonFileName();
 
         $this->_jsonDownload($sFileName, $aExportData);
@@ -72,7 +72,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     public function backupToFile(array $aBackupParameters, $sBackupFileSuffix = 'manual_backup')
     {
-        $aBackupData = $this->_getSettingsData($aBackupParameters);
+        $aBackupData = (array) $this->_getSettingsData($aBackupParameters);
         $sBackupsPath = $this->_getBackupFolderPath();
         $sFileName = $this->_getJsonFileName($sBackupFileSuffix);
 
@@ -249,14 +249,14 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      * @codeCoverageIgnore
      *
      * @param string $sFileName
-     * @param string $sFileData
+     * @param array  $aFileData
      */
-    protected function _jsonDownload($sFileName, $sFileData)
+    protected function _jsonDownload($sFileName, array $aFileData)
     {
         header('Content-disposition: attachment; filename=' . $sFileName);
         header('Content-type: application/json');
 
-        exit(json_encode($sFileData, JSON_PRETTY_PRINT)); //todo ddr: check if defined (PHP 5.4+ only)
+        exit($this->_json_encode($aFileData));
     }
 
     /**
@@ -285,13 +285,13 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      * @codeCoverageIgnore
      *
      * @param string $sFullFilePath
-     * @param string $sFileData
+     * @param array  $aFileData
      *
      * @return int
      */
-    protected function _jsonBackup($sFullFilePath, $sFileData)
+    protected function _jsonBackup($sFullFilePath, array $aFileData)
     {
-        return file_put_contents($sFullFilePath, json_encode($sFileData, JSON_PRETTY_PRINT));  //todo ddr: check if defined (PHP 5.4+ only)
+        return file_put_contents($sFullFilePath, $this->_json_encode($aFileData));
     }
 
     /**
@@ -363,5 +363,24 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         $oConfigurationStorage = oxRegistry::get('oxpsModulesConfigStorage');
 
         $oConfigurationStorage->save($sModuleId, $sSetting, $mValue);
+    }
+
+    /**
+     * Encode array in JSON format.
+     * If it's available, pretty printing option is used to make file more readable.
+     *
+     * @param array $aData
+     *
+     * @return string
+     */
+    protected function _json_encode(array $aData)
+    {
+        if (defined('JSON_PRETTY_PRINT')) {
+            $sData = json_encode($aData, JSON_PRETTY_PRINT);
+        } else {
+            $sData = json_encode($aData);
+        }
+
+        return $sData;
     }
 }
