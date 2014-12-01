@@ -7,7 +7,7 @@ div.box {
 }
 
 div.oxpsmodulesconfig-export {
-    width: 98%;
+    width: 100%;
     padding: 0;
 }
 
@@ -17,7 +17,8 @@ div.oxpsmodulesconfig-export span {
 
 table.oxpsmodulesconfig-wrapper {
     border: 1px solid #000000;
-    width: 98%;
+    border-top: none;
+    width: 100%;
 }
 
 table.oxpsmodulesconfig-wrapper td.edittext {
@@ -30,10 +31,6 @@ div.messagebox, div.errorbox {
 
 form#oxpsmodulesconfig div.row {
     margin-bottom: 20px;
-}
-
-form#oxpsmodulesconfig div.row:after {
-    clear: both;
     width: 100%;
 }
 
@@ -91,4 +88,9 @@ form#oxpsmodulesconfig div.row hr {
 
 form#oxpsmodulesconfig div.row input[type="submit"] {
     padding: 6px 20px;
+}
+
+form#oxpsmodulesconfig div.row div.clear {
+    clear: both;
+    width: 100%;
 }

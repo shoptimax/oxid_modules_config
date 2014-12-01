@@ -52,8 +52,14 @@
                             [{if $oModule->isActive()}]class="active"[{/if}]>[{$oModule->getTitle()}]</option>
                             [{/foreach}]
                         </select>
-                        <span onclick="selectAllModules(true);">[{oxmultilang ident="OXPS_MODULESCONFIG_ALL"}]</span>
-                        <span onclick="selectAllModules(false);">[{oxmultilang ident="OXPS_MODULESCONFIG_NONE"}]</span>
+                        <div>
+                            <span onclick="selectAllModules(true);">
+                                [{oxmultilang ident="OXPS_MODULESCONFIG_ALL"}]
+                            </span>
+                            <span onclick="selectAllModules(false);">
+                                [{oxmultilang ident="OXPS_MODULESCONFIG_NONE"}]
+                            </span>
+                        </div>
                     </div>
                     <div class="clear"><!-- --></div>
                 </div>
