@@ -15,18 +15,18 @@
  */
 
 /**
- * Class oxpsModulesConfigValidatorTest
- * Tests for core class oxpsModulesConfigValidator.
+ * Class oxpsModulesConfigJsonValidatorTest
+ * Tests for core class oxpsModulesConfigJsonValidator.
  *
- * @see oxpsModulesConfigValidator
+ * @see oxpsModulesConfigJsonValidator
  */
-class oxpsModulesConfigValidatorTest extends OxidTestCase
+class oxpsModulesConfigJsonValidatorTest extends OxidTestCase
 {
 
     /**
      * Subject under the test.
      *
-     * @var oxpsModulesConfigValidator
+     * @var oxpsModulesConfigJsonValidator
      */
     protected $SUT;
 
@@ -38,7 +38,7 @@ class oxpsModulesConfigValidatorTest extends OxidTestCase
     {
         parent::setUp();
 
-        $this->SUT = $this->getMock('oxpsModulesConfigValidator', array('__call'));
+        $this->SUT = $this->getMock('oxpsModulesConfigJsonValidator', array('__call'));
     }
 
     /**
@@ -145,19 +145,19 @@ class oxpsModulesConfigValidatorTest extends OxidTestCase
     /**
      * @dataProvider modulesConfigurationValidationDataProvider
      */
-    public function testValidate(array $aImportData, array $aSettingsDataHeader, array $aExpectedErrors)
+    public function testValidateJsonData(array $aImportData, array $aSettingsDataHeader, array $aExpectedErrors)
     {
         $this->SUT->init($aImportData, $aSettingsDataHeader);
 
-        $this->assertSame($aExpectedErrors, $this->SUT->validate());
+        $this->assertSame($aExpectedErrors, $this->SUT->validateJsonData());
     }
 
-    public function testValidate_nothingInitialized_returnEmptyDataError()
+    public function testValidateJsonData_nothingInitialized_returnEmptyDataError()
     {
-        $this->assertSame(array('OXPS_MODULESCONFIG_ERR_EMPTY_DATA'), $this->SUT->validate());
+        $this->assertSame(array('OXPS_MODULESCONFIG_ERR_EMPTY_DATA'), $this->SUT->validateJsonData());
     }
 
-    public function testValidate_noSettingHeaderInitialized_returnInvalidFormatError()
+    public function testValidateJsonData_noSettingHeaderInitialized_returnInvalidFormatError()
     {
         $this->SUT->init(
             array(
@@ -171,6 +171,6 @@ class oxpsModulesConfigValidatorTest extends OxidTestCase
             array()
         );
 
-        $this->assertSame(array('OXPS_MODULESCONFIG_ERR_INVALID_FORMAT'), $this->SUT->validate());
+        $this->assertSame(array('OXPS_MODULESCONFIG_ERR_INVALID_FORMAT'), $this->SUT->validateJsonData());
     }
 }

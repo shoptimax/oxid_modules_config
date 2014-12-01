@@ -104,11 +104,11 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     public function getImportDataValidationErrors()
     {
-        /** @var oxpsModulesConfigValidator $oImportDataValidator */
-        $oImportDataValidator = oxRegistry::get('oxpsModulesConfigValidator');
+        /** @var oxpsModulesConfigJsonValidator $oImportDataValidator */
+        $oImportDataValidator = oxRegistry::get('oxpsModulesConfigJsonValidator');
         $oImportDataValidator->init($this->getImportData(), $this->_getSettingsDataHeader());
 
-        return (array) $oImportDataValidator->validate();
+        return (array) $oImportDataValidator->validateJsonData();
     }
 
     /**

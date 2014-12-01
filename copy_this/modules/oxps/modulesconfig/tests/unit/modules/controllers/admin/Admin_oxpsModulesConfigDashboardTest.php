@@ -22,7 +22,7 @@
  */
 class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 {
-
+//TODO DDR:!!!!! Refactor!!!! As Admin_oxpsModulesConfigDashboard was refactored!
     /**
      * Subject under the test.
      *

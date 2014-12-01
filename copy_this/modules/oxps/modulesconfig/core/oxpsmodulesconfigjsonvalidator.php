@@ -15,10 +15,10 @@
  */
 
 /**
- * Class oxpsModulesConfigValidator
- * Modules configuration data validation helper.
+ * Class oxpsModulesConfigJsonValidator
+ * Modules configuration import JSON data validation helper.
  */
-class oxpsModulesConfigValidator extends oxSuperCfg
+class oxpsModulesConfigJsonValidator extends oxSuperCfg
 {
 
     /**
@@ -38,6 +38,8 @@ class oxpsModulesConfigValidator extends oxSuperCfg
 
 
     /**
+     * Initialize validation helper for JSON data verification.
+     *
      * @param array $aImportData
      * @param array $aSettingsDataHeader
      */
@@ -48,11 +50,11 @@ class oxpsModulesConfigValidator extends oxSuperCfg
     }
 
     /**
-     * Validate import data to be not empty, to have a proper format and match current shop.
+     * Validate JSON data to be not empty, to have a proper format and match current shop.
      *
      * @return array
      */
-    public function validate()
+    public function validateJsonData()
     {
         $aValidationMethods = array(
             '_validateImportDataNotEmpty',

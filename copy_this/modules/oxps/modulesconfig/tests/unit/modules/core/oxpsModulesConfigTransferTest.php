@@ -291,8 +291,8 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
         $oConfig->expects($this->once())->method('getShopId')->will($this->returnValue(1));
 
         // Import data validator mock
-        /** @var oxpsModulesConfigValidator $oValidator */
-        $oValidator = $this->getMock('oxpsModulesConfigValidator', array('__call', 'init', 'validate'));
+        /** @var oxpsModulesConfigJsonValidator $oValidator */
+        $oValidator = $this->getMock('oxpsModulesConfigJsonValidator', array('__call', 'init', 'validate'));
         $oValidator->expects($this->once())->method('init')->with(
             array(
                 '_OXID_ESHOP_MODULES_CONFIGURATION_' => array(
@@ -315,7 +315,7 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
             $this->returnValue(array('ERR_SHOP_VERSION_WRONG', 'ERR_SHOP_EDITION_WRONG'))
         );
 
-        oxRegistry::set('oxpsModulesConfigValidator', $oValidator);
+        oxRegistry::set('oxpsModulesConfigJsonValidator', $oValidator);
 
         $this->SUT->expects($this->once())->method('getConfig')->will($this->returnValue($oConfig));
         $this->SUT->setImportData(
