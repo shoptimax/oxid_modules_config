@@ -12,13 +12,10 @@
             oModulesSelect.options[i].selected = blIsSelected;
         }
     }"}]
-<table cellspacing="0" cellpadding="0" border="0" width="98%" xmlns="http://www.w3.org/1999/html"
-       xmlns="http://www.w3.org/1999/html">
-    <tr>
-        <th valign="top" class="edittext">
-            <h1>[{oxmultilang ident="OXPS_MODULESCONFIG_DASHBOARD"}]</h1>
-        </th>
-    </tr>
+<div class="export oxpsmodulesconfig-export">
+    <span>[{oxmultilang ident="OXPS_MODULESCONFIG_DASHBOARD"}]</span>
+</div>
+<table class="oxpsmodulesconfig-wrapper" cellspacing="0" cellpadding="0" border="0" xmlns="http://www.w3.org/1999/html">
     <tr>
         <td valign="top" class="edittext" align="left">
             [{if $aErrors}]
@@ -42,55 +39,64 @@
             [{if $aModules}]
             <form method="post" id="oxpsmodulesconfig" enctype="multipart/form-data"
                   action="[{$oViewConf->getSelfLink()}]cl=admin_oxpsmodulesconfigdashboard&fnc=actionSubmit">
-                <div>
+                <div class="row">
                     <label for="oxpsmodulesconfig_modules">
                         [{oxmultilang ident="OXPS_MODULESCONFIG_MODULES"}]&nbsp;
                         [{oxinputhelp ident="OXPS_MODULESCONFIG_MODULES_HELP"}]
                     </label>
-                    <select id="oxpsmodulesconfig_modules" name="oxpsmodulesconfig_modules[]" multiple="multiple"
-                            size="10">
-                        [{foreach from=$aModules key="sModuleId" item="oModule"}]
-                    <option value="[{$sModuleId}]"
-                        [{if $oModule->isActive()}]class="active"[{/if}]>[{$oModule->getTitle()}]</option>
-                        [{/foreach}]
-                    </select>
-                    <span onclick="selectAllModules(true);">[{oxmultilang ident="OXPS_MODULESCONFIG_ALL"}]</span>
-                    <span onclick="selectAllModules(false);">[{oxmultilang ident="OXPS_MODULESCONFIG_NONE"}]</span>
+                    <div class="input">
+                        <select id="oxpsmodulesconfig_modules" name="oxpsmodulesconfig_modules[]" multiple="multiple"
+                                size="10">
+                            [{foreach from=$aModules key="sModuleId" item="oModule"}]
+                        <option value="[{$sModuleId}]"
+                            [{if $oModule->isActive()}]class="active"[{/if}]>[{$oModule->getTitle()}]</option>
+                            [{/foreach}]
+                        </select>
+                        <span onclick="selectAllModules(true);">[{oxmultilang ident="OXPS_MODULESCONFIG_ALL"}]</span>
+                        <span onclick="selectAllModules(false);">[{oxmultilang ident="OXPS_MODULESCONFIG_NONE"}]</span>
+                    </div>
+                    <div class="clear"><!-- --></div>
                 </div>
-                <div>
+                <div class="row">
                     <label>
                         [{oxmultilang ident="OXPS_MODULESCONFIG_SETTINGS"}]&nbsp;
                         [{oxinputhelp ident="OXPS_MODULESCONFIG_SETTINGS_HELP"}]
                     </label>
-                    [{foreach from=$aSettings key="sSettingName" item="sSettingLabel"}]
-                    <label for="oxpsmodulesconfig_setting_[{$sSettingName}]">
-                        <input type="checkbox" id="oxpsmodulesconfig_setting_[{$sSettingName}]"
-                               name="oxpsmodulesconfig_settings[[{$sSettingName}]]" value="1" checked=""/>
-                        [{oxmultilang ident=$sSettingLabel}]
-                    </label>
-                    [{/foreach}]
+                    <div class="input">
+                        [{foreach from=$aSettings key="sSettingName" item="sSettingLabel"}]
+                        <label class="inner" for="oxpsmodulesconfig_setting_[{$sSettingName}]">
+                            <input type="checkbox" id="oxpsmodulesconfig_setting_[{$sSettingName}]"
+                                   name="oxpsmodulesconfig_settings[[{$sSettingName}]]" value="1" checked=""/>
+                            [{oxmultilang ident=$sSettingLabel}]
+                        </label>
+                        [{/foreach}]
+                    </div>
+                    <div class="clear"><!-- --></div>
                     <hr/>
                 </div>
-                <div>
+                <div class="row">
                     <input type="submit" name="oxpsmodulesconfig_export"
                            value="[{oxmultilang ident="OXPS_MODULESCONFIG_EXPORT"}]"/>&nbsp;
                     [{oxinputhelp ident="OXPS_MODULESCONFIG_EXPORT_HELP"}]
                     <hr/>
                 </div>
-                <div>
+                <div class="row">
                     <input type="submit" name="oxpsmodulesconfig_backup"
                            value="[{oxmultilang ident="OXPS_MODULESCONFIG_BACKUP"}]"/>&nbsp;
                     [{oxinputhelp ident="OXPS_MODULESCONFIG_BACKUP_HELP"}]
                     <hr/>
                 </div>
-                <div>
+                <div class="row">
                     <label>
                         [{oxmultilang ident="OXPS_MODULESCONFIG_FILE"}]&nbsp;
                         [{oxinputhelp ident="OXPS_MODULESCONFIG_FILE_HELP"}]
                     </label>
-                    <input type="file" name="oxpsmodulesconfig_file" accept="application/json"/>
+                    <div class="input">
+                        <input type="file" name="oxpsmodulesconfig_file" accept="application/json"/>
+                    </div>
+                    <div class="clear"><!-- --></div>
                 </div>
-                <div>
+                <div class="row">
                     <input type="submit" name="oxpsmodulesconfig_import"
                            value="[{oxmultilang ident="OXPS_MODULESCONFIG_IMPORT"}]"/>&nbsp;
                     [{oxinputhelp ident="OXPS_MODULESCONFIG_IMPORT_HELP"}]
