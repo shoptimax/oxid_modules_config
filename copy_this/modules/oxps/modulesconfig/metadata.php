@@ -24,13 +24,13 @@ $sMetadataVersion = '1.1';
  */
 $aModule = array(
     'id'          => 'oxpsmodulesconfig',
-    'title'       => 'Modules Config',
+    'title'       => 'OXID Module Configuration Im-/Exporter',
     'description' => array(
-        'de' => '[TR - Modules configuration export, backup and import tools]',
-        'en' => 'Modules configuration export, backup and import tools',
+        'de' => '[TR - Tools to export, backup and import OXID eShop modules configuration data.]',
+        'en' => 'Tools to export, backup and import OXID eShop modules configuration data.',
     ),
-    'thumbnail'   => 'out/pictures/picture.png',
-    'version'     => '0.1.1',
+    'thumbnail'   => 'out/pictures/oxpsmodulesconfig.png',
+    'version'     => '0.2.0',
     'author'      => 'OXID Professional Services',
     'url'         => 'http://www.oxid-esales.com',
     'email'       => 'info@oxid-esales.com',
@@ -45,8 +45,6 @@ $aModule = array(
     'templates'   => array(
         'admin_oxpsmodulesconfigdashboard.tpl' => 'oxps/modulesconfig/views/admin/admin_oxpsmodulesconfigdashboard.tpl',
     ),
-    'blocks'      => array(),
-    'settings'    => array(),
     'events'      => array(
         'onActivate'   => 'oxpsModulesConfigModule::onActivate',
         'onDeactivate' => 'oxpsModulesConfigModule::onDeactivate',

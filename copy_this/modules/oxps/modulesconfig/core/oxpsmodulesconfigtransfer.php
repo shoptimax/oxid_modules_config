@@ -256,7 +256,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         header('Content-disposition: attachment; filename=' . $sFileName);
         header('Content-type: application/json');
 
-        exit(json_encode($sFileData));
+        exit(json_encode($sFileData, JSON_PRETTY_PRINT)); //todo ddr: check if defined (PHP 5.4+ only)
     }
 
     /**
@@ -291,7 +291,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     protected function _jsonBackup($sFullFilePath, $sFileData)
     {
-        return file_put_contents($sFullFilePath, json_encode($sFileData));
+        return file_put_contents($sFullFilePath, json_encode($sFileData, JSON_PRETTY_PRINT));  //todo ddr: check if defined (PHP 5.4+ only)
     }
 
     /**

@@ -1,5 +1,5 @@
 ==Title==
-Modules Config
+OXID Module Configuration Im-/Exporter
 
 ==Author==
 OXID Professional Services
@@ -11,7 +11,7 @@ oxps
 5.1.x/4.8.x-5.2.x/4.9.x
 
 ==Version==
-0.1.1
+0.2.0
 
 ==Link==
 http://www.oxid-esales.com
@@ -20,10 +20,11 @@ http://www.oxid-esales.com
 info@oxid-esales.com
 
 ==Description==
-Modules configuration export, backup and import tools
+Tools to export, backup and import OXID eShop modules configuration data.
 
 ==Installation==
-Activate the module in administration area.
+ * Copy the content of copy_this/ folder to OXID eShop root folder
+ * Activate the module in administration area
 
 ==Extend==
 
@@ -32,4 +33,5 @@ Activate the module in administration area.
 ==Modified original templates==
 
 ==Uninstall==
-Disable the module in administration area and delete module folder.
+ * Disable the module in administration area
+ * Delete module folder

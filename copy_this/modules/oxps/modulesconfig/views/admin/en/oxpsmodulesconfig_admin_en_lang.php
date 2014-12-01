@@ -18,7 +18,7 @@ $sLangName = 'English';
 
 $aLang = array(
     'charset'                                => 'UTF-8',
-    'oxpsmodulesconfig'                      => 'Modules Config',
+    'oxpsmodulesconfig'                      => 'Module Configuration Im-/Exporter',
 
     // Common dashboard translations
     'OXPS_MODULESCONFIG_DASHBOARD'           => 'Modules Configuration Export and Import',
@@ -27,7 +27,7 @@ $aLang = array(
     // Form translations
     'OXPS_MODULESCONFIG_MODULES'             => 'Select modules for export or import',
     'OXPS_MODULESCONFIG_MODULES_HELP'        => 'Hold "Ctrl" button and click to select module that should be ' .
-                                                'enrolled in configuration export or import action.',
+                                                'evolved in configuration export or import action.',
     'OXPS_MODULESCONFIG_ALL'                 => 'Select All',
     'OXPS_MODULESCONFIG_NONE'                => 'Deselect All',
     'OXPS_MODULESCONFIG_SETTINGS'            => 'Choose settings to export or import',
@@ -86,6 +86,5 @@ $aLang = array(
     // Messages
     'OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS'  => 'Backup was created successfully. ' .
                                                 'File was saved to eShop folder "export/modules_config/".',
-    'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS'  => 'Modules configuration was imported successfully. ' .
-                                                'Refer to a log file for details.',
+    'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS'  => 'Modules configuration was imported successfully. ',
 );

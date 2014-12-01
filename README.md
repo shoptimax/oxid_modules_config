@@ -1,38 +1,36 @@
-# Modules Config
+# OXID Module Configuration Im-/Exporter
 
 ----
 
-Modules configuration export and import tools.
-It is a GUI based dashboard in administration area under Service -> Modules Config.
-All relevant modules configuration is involved including: Versions, Extended classes, Module classes, Templates, Blocks, Settings and Events.
+Tools to export, backup and import OXID eShop modules configuration data.
+It is a GUI based dashboard in eShop administration area under _Service -> Modules Config_.
+All relevant modules configuration is being used including: Versions, Extended classes, Module classes, Templates, Blocks, Settings and Events.
 
 ## Installation
-- Copy content of _copy\_this/_ folder to eShop root directory
-- Activate the module in administration back end
+ - Copy the content of `copy_this/` folder to OXID eShop root folder
+ - Activate the module in administration area
 
 ## Usage
-- Go to Service -> Modules Config
+- Go to _Service -> Modules Config_
 - Select which modules and settings to export, backup or import
-- Press "Export" to download settings as JSON file immediately
-- Press "Backup" to save JSON file in _export/modules\_config/_
-- Choose a file to import and press "Import" to update modues settings from a JSON file
-  Before the an import a full backup is done and after the import, eShop cache is cleared
-  
+- Press "Export" to download settings immediately as a JSON file 
+- Press "Backup" to save settings in JSON file under `export/modules_config/`
+- Choose a file to import and press "Import" to update modules settings from a JSON file.
+  Before the import a full backup is done and after the import, eShop cache is cleared.
+
 ## JSON file structure
-- It is built from array with eShop data and settings data
-- eShop version, edition and sub-shop ID are stored to identify shop
-- Module configuration is split for each module separately by module ID
-- Module configuration keys are same as in metadata file and value are as stored in eShop but non encrypted
-- Since it is a text file, it could be also edited by hand and put under version control.
+- It is built from array containing some general eShop data and modules settings data
+- eShop version, edition and sub-shop ID are stored to identify a shop
+- Module configuration is split for each module separately by module ID (except "extend" data)
+- Module configuration keys are same as in metadata file and value are same as stored in eShop and non encrypted
+- Since it is a text file, it could be also edited by hand and put under version control!
 
 ## To do and nice to have features for future releases
-- Reformat for OXID PSR standards
-- Force mode to allow importing configuration to any shop without checking versions
-- Export and import off all sub-shops data in one file
-- On new module data imported, trigger activation and rebuild views
-- Log import of each single setting to a file
+- Force mode to allow importing configuration to any eShop without checking versions
+- An option to export and import off all sub-shops data in one file
+- On a new module (not installed module) data import, trigger activation event and rebuild views
+- Log import process to a file
 - Automatic restore of last backup on at least one setting import failure
-- More validation rules for import data: check if imported and selected modules intersect
+- More validation rules for import data: check if imported and if selected modules match import file
 - For extended classes settings also split it by modules ID (metadata parsing needed)
-- Refactor long admin controller class
-- Add an option to export / import global CMS snippets
+- Add an option to export / import global CMS snippets used by modules
