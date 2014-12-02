@@ -273,6 +273,8 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      */
     protected function _jsonDownload($sFileName, array $aFileData)
     {
+        ob_clean();
+
         header('Content-disposition: attachment; filename=' . $sFileName);
         header('Content-Type: application/json; charset=UTF-8');
 
