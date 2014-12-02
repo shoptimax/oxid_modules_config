@@ -154,37 +154,12 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     public function actionSubmit()
     {
         $aRequestData = $this->_getRequestData();
-        $oValidator = $this->getValidator();
 
-        if (!$oValidator->validateRequestData($aRequestData)) {
+        if (!$this->getValidator()->validateRequestData($aRequestData)) {
             return false;
         }
 
-        $sAction = $this->getAction();
-
-        switch ($sAction) {
-            case 'export':
-                $this->_exportModulesConfig($aRequestData);
-                break;
-
-            case 'backup':
-                $this->_backupModuleSettings($aRequestData);
-                break;
-
-            case 'import':
-                $aImportData = $this->_getImportData();
-
-                if (!$oValidator->validateImportData($aImportData)) {
-                    return false;
-                } else {
-                    $this->_backupModuleSettings($this->_getAllModulesAndSettingsData(), 'full_backup');
-                    $this->_importModulesConfig($aRequestData, $aImportData);
-                }
-
-                break;
-        }
-
-        return true;
+        return $this->_invokeAction($this->getAction(), $aRequestData);
     }
 
 
@@ -251,6 +226,35 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
      --------------------*/
 
     /**
+     * Trigger a proper action by its name.
+     *
+     * @param string $sAction
+     * @param array  $aData
+     *
+     * @return bool
+     */
+    protected function _invokeAction($sAction, array $aData)
+    {
+        $blReturn = true;
+
+        switch ($sAction) {
+            case 'export':
+                $this->_exportModulesConfig($aData);
+                break;
+
+            case 'backup':
+                $this->_backupModuleSettings($aData);
+                break;
+
+            case 'import':
+                $blReturn = (bool) $this->_importModulesConfig($aData);
+                break;
+        }
+
+        return $blReturn;
+    }
+
+    /**
      * Export checked settings of the selected modules to JSON file and pass it for download.
      *
      * @param array $aData
@@ -283,6 +287,27 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     }
 
     /**
+     * Check import data and invoke module configuration data import.
+     *
+     * @param array $aRequestData
+     *
+     * @return bool
+     */
+    protected function _importModulesConfig(array $aRequestData)
+    {
+        $aImportData = $this->_getImportData();
+
+        if (!$this->getValidator()->validateImportData($aImportData)) {
+            return false;
+        } else {
+            $this->_backupModuleSettings($this->_getAllModulesAndSettingsData(), 'full_backup');
+            $this->_runModulesConfigImport($aRequestData, $aImportData);
+        }
+
+        return true;
+    }
+
+    /**
      * Initialize import helper with uploaded file data and perform import for checked settings of selected modules.
      * On successful import clear eShop cache.
      *
@@ -291,7 +316,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
      * @param array $aRequestData
      * @param array $aImportData
      */
-    protected function _importModulesConfig(array $aRequestData, array $aImportData)
+    protected function _runModulesConfigImport(array $aRequestData, array $aImportData)
     {
         /** @var oxpsModulesConfigTransfer $oModulesConfig */
         $oModulesConfig = oxNew('oxpsModulesConfigTransfer');

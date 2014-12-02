@@ -203,24 +203,42 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      *
      * @param array $aImportModules
      * @param array $aRequestedModules
-     * @param array $sRequestedSettings
+     * @param array $aRequestedSettings
      *
      * @return bool True if at least one setting was updated, False otherwise.
      */
-    protected function _setSettingsValues(array $aImportModules, array $aRequestedModules, array $sRequestedSettings)
+    protected function _setSettingsValues(array $aImportModules, array $aRequestedModules, array $aRequestedSettings)
     {
         $blSettingUpdated = false;
 
         foreach ($aRequestedModules as $sModuleId) {
             if (array_key_exists($sModuleId, $aImportModules)) {
                 $aImportModule = (array) $aImportModules[$sModuleId];
+                $blModuleUpdated = $this->_setModuleSettingsValues($sModuleId, $aImportModule, $aRequestedSettings);
+                $blSettingUpdated = ($blSettingUpdated or $blModuleUpdated);
+            }
+        }
 
-                foreach ($sRequestedSettings as $sSetting) {
-                    if (array_key_exists($sSetting, $aImportModule)) {
-                        $this->_setSettingValue($sModuleId, $sSetting, $aImportModule[$sSetting]);
-                        $blSettingUpdated = true;
-                    }
-                }
+        return $blSettingUpdated;
+    }
+
+    /**
+     * Set requested settings list for a module.
+     *
+     * @param string $sModuleId
+     * @param array  $aModuleData
+     * @param array  $aRequestedSettings
+     *
+     * @return bool
+     */
+    protected function _setModuleSettingsValues($sModuleId, array $aModuleData, array $aRequestedSettings)
+    {
+        $blSettingUpdated = false;
+
+        foreach ($aRequestedSettings as $sSetting) {
+            if (array_key_exists($sSetting, $aModuleData)) {
+                $this->_setSettingValue($sModuleId, $sSetting, $aModuleData[$sSetting]);
+                $blSettingUpdated = true;
             }
         }
 

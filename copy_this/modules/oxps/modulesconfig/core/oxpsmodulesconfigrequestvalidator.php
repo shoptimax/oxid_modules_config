@@ -127,11 +127,21 @@ class oxpsModulesConfigRequestValidator extends oxSuperCfg
             return;
         }
 
+        $this->_checkIfModulesAreAvailable($aData['modules']);
+    }
+
+    /**
+     * Check if modules are available.
+     *
+     * @param array $aModules
+     */
+    protected function _checkIfModulesAreAvailable(array $aModules)
+    {
         /** @var oxpsModulesConfigContent $oContent */
         $oContent = oxRegistry::get('oxpsModulesConfigContent');
         $aValidModules = $oContent->getModulesList();
 
-        foreach ($aData['modules'] as $sModule) {
+        foreach ($aModules as $sModule) {
             if (!array_key_exists($sModule, $aValidModules)) {
                 $this->addError('OXPS_MODULESCONFIG_ERR_INVALID_MODULE');
                 break;
@@ -152,11 +162,21 @@ class oxpsModulesConfigRequestValidator extends oxSuperCfg
             return;
         }
 
+        $this->_checkIfSettingsAreAvailable($aData['settings']);
+    }
+
+    /**
+     * Check if settings are available.
+     *
+     * @param array $aSettings
+     */
+    protected function _checkIfSettingsAreAvailable(array $aSettings)
+    {
         /** @var oxpsModulesConfigContent $oContent */
         $oContent = oxRegistry::get('oxpsModulesConfigContent');
         $aValidSettings = $oContent->getSettingsList();
 
-        foreach ($aData['settings'] as $sSettings) {
+        foreach ($aSettings as $sSettings) {
             if (!array_key_exists($sSettings, $aValidSettings)) {
                 $this->addError('OXPS_MODULESCONFIG_ERR_INVALID_SETTING');
                 break;
@@ -207,13 +227,38 @@ class oxpsModulesConfigRequestValidator extends oxSuperCfg
      */
     protected function _validateImportFile(array $aFileData)
     {
-        if (empty($aFileData['type']) or
-            !in_array($aFileData['type'], array('application/json', 'application/octet-stream'))
-        ) {
+        if (!$this->_checkIfTypeIsValid($aFileData)) {
             $this->addError('OXPS_MODULESCONFIG_ERR_FILE_TYPE');
-        } elseif (empty($aFileData['tmp_name']) or !$this->_isReadableFile($aFileData['tmp_name'])) {
+        } elseif (!$this->_checkIfFileIsReadable($aFileData)) {
             $this->addError('OXPS_MODULESCONFIG_ERR_CANNOT_READ');
         }
+    }
+
+    /**
+     * Check if file type is not empty and is JSON.
+     *
+     * @param array $aFileData
+     *
+     * @return bool
+     */
+    protected function _checkIfTypeIsValid(array $aFileData)
+    {
+        return (
+            !empty($aFileData['type']) and
+            in_array($aFileData['type'], array('application/json', 'application/octet-stream'))
+        );
+    }
+
+    /**
+     * Check if temp file path is not empty and the file is readable.
+     *
+     * @param array $aFileData
+     *
+     * @return bool
+     */
+    protected function _checkIfFileIsReadable(array $aFileData)
+    {
+        return (!empty($aFileData['tmp_name']) and $this->_isReadableFile($aFileData['tmp_name']));
     }
 
     /**

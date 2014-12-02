@@ -96,26 +96,17 @@ class oxpsModulesConfigStorage extends oxConfig
      */
     protected function _load($sModuleId, $sSettingOrigin, $sSettingKey)
     {
-        switch ($sSettingOrigin) {
-            case 'oxConfig':
-                $mSetting = $this->_loadFromShopConfig($sModuleId, $sSettingKey);
-                break;
+        $mSetting = null;
+        $aLoadMethodsMap = array(
+            'oxConfig'        => '_loadFromShopConfig',
+            'oxConfig-Global' => '_loadFromShopConfigAndSeparate',
+            'oxConfig-List'   => '_loadListFromShopConfig',
+            'oxtplblocks'     => '_loadFromBlocksTable',
+        );
 
-            case 'oxConfig-Global':
-                $mSetting = $this->_loadFromShopConfigAndSeparate($sModuleId, $sSettingKey);
-                break;
-
-            case 'oxConfig-List':
-                $mSetting = $this->_loadListFromShopConfig($sModuleId);
-                break;
-
-            case 'oxtplblocks':
-                $mSetting = $this->_loadFromBlocksTable($sModuleId);
-                break;
-
-            default:
-                $mSetting = null;
-                break;
+        if (array_key_exists($sSettingOrigin, $aLoadMethodsMap)) {
+            $sLoadMethodName = $aLoadMethodsMap[$sSettingOrigin];
+            $mSetting = $this->$sLoadMethodName($sModuleId, $sSettingKey);
         }
 
         return $mSetting;
@@ -132,25 +123,29 @@ class oxpsModulesConfigStorage extends oxConfig
      */
     protected function _save($sModuleId, $sSettingOrigin, $sSettingKey, $mValue)
     {
-        switch ($sSettingOrigin) {
-            case 'oxConfig':
-                $this->_saveToShopConfig($sModuleId, $sSettingKey, $mValue);
-                break;
+        $aSaveMethodsMap = array(
+            'oxConfig'        => array(
+                'method'    => '_saveToShopConfig',
+                'arguments' => array($sModuleId, $sSettingKey, $mValue),
+            ),
+            'oxConfig-Global' => array(
+                'method'    => '_saveToShopConfigMerged',
+                'arguments' => array($sModuleId, $sSettingKey, (array) $mValue),
+            ),
+            'oxConfig-List'   => array(
+                'method'    => '_saveModuleSettings',
+                'arguments' => array($sModuleId, (array) $mValue),
+            ),
+            'oxtplblocks'     => array(
+                'method'    => '_saveModuleBlocks',
+                'arguments' => array($sModuleId, (array) $mValue),
+            ),
+        );
 
-            case 'oxConfig-Global':
-                $this->_saveToShopConfigMerged($sModuleId, $sSettingKey, (array) $mValue);
-                break;
-
-            case 'oxConfig-List':
-                $this->_saveModuleSettings($sModuleId, (array) $mValue);
-                break;
-
-            case 'oxtplblocks':
-                $this->_saveModuleBlocks($sModuleId, (array) $mValue);
-                break;
-
-            default:
-                break;
+        if (array_key_exists($sSettingOrigin, $aSaveMethodsMap)) {
+            $sSaveMethodName = $aSaveMethodsMap[$sSettingOrigin]['method'];
+            $aSaveMethodArguments = $aSaveMethodsMap[$sSettingOrigin]['arguments'];
+            call_user_func_array(array($this, $sSaveMethodName), $aSaveMethodArguments);
         }
     }
 
@@ -194,10 +189,11 @@ class oxpsModulesConfigStorage extends oxConfig
      * @codeCoverageIgnore
      *
      * @param string $sModuleId
+     * @param string $sSettingKey
      *
      * @return array
      */
-    protected function _loadListFromShopConfig($sModuleId)
+    protected function _loadListFromShopConfig($sModuleId, $sSettingKey)
     {
         $oDb = oxDb::getDb(oxdb::FETCH_MODE_ASSOC);
 
@@ -218,10 +214,11 @@ class oxpsModulesConfigStorage extends oxConfig
      * @codeCoverageIgnore
      *
      * @param string $sModuleId
+     * @param string $sSettingKey
      *
      * @return array
      */
-    protected function _loadFromBlocksTable($sModuleId)
+    protected function _loadFromBlocksTable($sModuleId, $sSettingKey)
     {
         $oDb = oxDb::getDb(oxdb::FETCH_MODE_ASSOC);
 
