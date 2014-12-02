@@ -24,6 +24,7 @@ All relevant modules configuration is being used including: Versions, Extended c
 - Module configuration is split for each module separately by module ID (except "extend" data)
 - Module configuration keys are same as in metadata file and value are same as stored in eShop and non encrypted
 - Since it is a text file, it could be also edited by hand and put under version control!
+- Note, that import JSON files encoding should be UTF-8 without BOM
 
 ## To do and nice to have features for future releases
 - Force mode to allow importing configuration to any eShop without checking versions
