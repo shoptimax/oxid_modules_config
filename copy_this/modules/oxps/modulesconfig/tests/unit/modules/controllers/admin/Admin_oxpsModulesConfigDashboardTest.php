@@ -141,7 +141,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
     }
 
 
-    public function testActionSubmit_invalidRequestData_returnFalse()
+    public function testActionSubmit_invalidRequestData()
     {
         // Request validator instance mock
         $oValidator = $this->getMock('oxpsModulesConfigRequestValidator', array('__call', 'validateRequestData'));
@@ -151,7 +151,8 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxRegistry::set('oxpsModulesConfigRequestValidator', $oValidator);
 
-        $this->assertFalse($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
+        $this->assertSame(array(), $this->SUT->getMessages());
     }
 
     public function testActionSubmit_validExportRequest_callExportAndDownloadHandler()
@@ -188,7 +189,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxTestModules::addModuleObject('oxpsModulesConfigTransfer', $oConfigTransfer);
 
-        $this->assertTrue($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
         $this->assertSame('export', $this->SUT->getAction());
         $this->assertSame(array(), $this->SUT->getMessages());
     }
@@ -230,7 +231,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxTestModules::addModuleObject('oxpsModulesConfigTransfer', $oConfigTransfer);
 
-        $this->assertTrue($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
         $this->assertSame('backup', $this->SUT->getAction());
         $this->assertSame(array(), $this->SUT->getMessages());
     }
@@ -272,7 +273,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxTestModules::addModuleObject('oxpsModulesConfigTransfer', $oConfigTransfer);
 
-        $this->assertTrue($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
         $this->assertSame('backup', $this->SUT->getAction());
         $this->assertSame(array('OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS'), $this->SUT->getMessages());
     }
@@ -323,7 +324,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxTestModules::addModuleObject('oxpsModulesConfigTransfer', $oConfigTransfer);
 
-        $this->assertFalse($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
         $this->assertSame('import', $this->SUT->getAction());
         $this->assertSame(array(), $this->SUT->getMessages());
     }
@@ -435,7 +436,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxRegistry::set('oxpsModulesConfigContent', $oContent);
 
-        $this->assertTrue($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
         $this->assertSame('import', $this->SUT->getAction());
         $this->assertSame(array('OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS'), $this->SUT->getMessages());
     }
@@ -549,7 +550,7 @@ class Admin_oxpsModulesConfigDashboardTest extends OxidTestCase
 
         oxTestModules::addModuleObject('oxpsModulesConfigModule', $oModule);
 
-        $this->assertTrue($this->SUT->actionSubmit());
+        $this->SUT->actionSubmit();
         $this->assertSame('import', $this->SUT->getAction());
         $this->assertSame(
             array('OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS', 'OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS'),

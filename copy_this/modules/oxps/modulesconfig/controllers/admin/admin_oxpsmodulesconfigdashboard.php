@@ -148,18 +148,14 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
     /**
      * Export, backup amd import actions handler.
      * Collect form and import files data, validates it and performs the export or backup, or backup plus import.
-     *
-     * @return bool
      */
     public function actionSubmit()
     {
         $aRequestData = $this->_getRequestData();
 
-        if (!$this->getValidator()->validateRequestData($aRequestData)) {
-            return false;
+        if ($this->getValidator()->validateRequestData($aRequestData)) {
+            $this->_invokeAction($this->getAction(), $aRequestData);
         }
-
-        return $this->_invokeAction($this->getAction(), $aRequestData);
     }
 
 
@@ -243,7 +239,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
                 break;
 
             case 'backup':
-                $this->_backupModuleSettings($aData);
+                $blReturn = (bool) $this->_backupModuleSettings($aData);
                 break;
 
             case 'import':
@@ -273,6 +269,8 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
      *
      * @param array  $aData
      * @param string $sBackupFileSuffix
+     *
+     * @return bool
      */
     protected function _backupModuleSettings(array $aData, $sBackupFileSuffix = '')
     {
@@ -281,8 +279,12 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
 
         if (!$oModulesConfig->backupToFile($aData, $sBackupFileSuffix)) {
             $this->getValidator()->addError('OXPS_MODULESCONFIG_ERR_BACKUP_FAILED');
+
+            return false;
         } else {
             $this->addMessage('OXPS_MODULESCONFIG_MSG_BACKUP_SUCCESS');
+
+            return true;
         }
     }
 
