@@ -97,10 +97,14 @@ class oxpsModulesConfigRequestValidator extends oxSuperCfg
     {
         if (empty($aData)) {
             $this->addError('OXPS_MODULESCONFIG_ERR_NO_FILE');
+
+            return false;
         }
 
         if (!empty($aData['error'])) {
             $this->_setFileUploadError($aData['error']);
+
+            return false;
         }
 
         $this->_validateImportFile($aData);
@@ -207,9 +211,7 @@ class oxpsModulesConfigRequestValidator extends oxSuperCfg
             !in_array($aFileData['type'], array('application/json', 'application/octet-stream'))
         ) {
             $this->addError('OXPS_MODULESCONFIG_ERR_FILE_TYPE');
-        }
-
-        if (empty($aFileData['tmp_name']) or !$this->_isReadableFile($aFileData['tmp_name'])) {
+        } elseif (empty($aFileData['tmp_name']) or !$this->_isReadableFile($aFileData['tmp_name'])) {
             $this->addError('OXPS_MODULESCONFIG_ERR_CANNOT_READ');
         }
     }
@@ -230,15 +232,19 @@ class oxpsModulesConfigRequestValidator extends oxSuperCfg
 
     /**
      * Set JSON import data from file and check modules configuration data for errors.
+     * Checks it only if there are no other errors.
      *
      * @param array $aFileData
      */
     protected function _validateJsonData(array $aFileData)
     {
-        /** @var oxpsModulesConfigTransfer $oModulesConfig */
-        $oModulesConfig = oxNew('oxpsModulesConfigTransfer');
-        $oModulesConfig->setImportDataFromFile($aFileData);
+        if (!$this->getErrors()) {
 
-        $this->addErrors((array) $oModulesConfig->getImportDataValidationErrors());
+            /** @var oxpsModulesConfigTransfer $oModulesConfig */
+            $oModulesConfig = oxNew('oxpsModulesConfigTransfer');
+            $oModulesConfig->setImportDataFromFile($aFileData);
+
+            $this->addErrors((array) $oModulesConfig->getImportDataValidationErrors());
+        }
     }
 }

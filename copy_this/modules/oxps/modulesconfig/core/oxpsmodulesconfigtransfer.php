@@ -369,6 +369,8 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
      * Encode array in JSON format.
      * If it's available, pretty printing option is used to make file more readable.
      *
+     * @codeCoverageIgnore
+     *
      * @param array $aData
      *
      * @return string

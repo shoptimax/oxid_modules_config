@@ -184,7 +184,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
                 break;
         }
 
-        return false;
+        return true;
     }
 
 

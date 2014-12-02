@@ -292,7 +292,7 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
 
         // Import data validator mock
         /** @var oxpsModulesConfigJsonValidator $oValidator */
-        $oValidator = $this->getMock('oxpsModulesConfigJsonValidator', array('__call', 'init', 'validate'));
+        $oValidator = $this->getMock('oxpsModulesConfigJsonValidator', array('__call', 'init', 'validateJsonData'));
         $oValidator->expects($this->once())->method('init')->with(
             array(
                 '_OXID_ESHOP_MODULES_CONFIGURATION_' => array(
@@ -311,7 +311,7 @@ class oxpsModulesConfigTransferTest extends OxidTestCase
                 )
             )
         );
-        $oValidator->expects($this->once())->method('validate')->will(
+        $oValidator->expects($this->once())->method('validateJsonData')->will(
             $this->returnValue(array('ERR_SHOP_VERSION_WRONG', 'ERR_SHOP_EDITION_WRONG'))
         );
 
