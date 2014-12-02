@@ -17,6 +17,8 @@
 /**
  * Class oxpsModulesConfigTransfer
  * Modules configuration export, backup and import actions handler.
+ *
+ * @todo: Collect JSON encode/decode errors from json_last_error()?
  */
 class oxpsModulesConfigTransfer extends oxSuperCfg
 {
@@ -92,7 +94,7 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
             $sData = file_get_contents($aImportFileData['tmp_name']);
 
             if (!empty($sData)) {
-                $this->setImportData((array) json_decode($sData));
+                $this->setImportData($this->_json_decode($sData));
             }
         }
     }
@@ -402,5 +404,19 @@ class oxpsModulesConfigTransfer extends oxSuperCfg
         }
 
         return $sData;
+    }
+
+    /**
+     * Decode JSON string data to an assoc array.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $sData
+     *
+     * @return array
+     */
+    protected function _json_decode($sData)
+    {
+        return (array) json_decode((string) $sData);
     }
 }
