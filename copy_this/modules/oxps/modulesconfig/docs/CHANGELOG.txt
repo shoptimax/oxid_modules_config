@@ -8,3 +8,5 @@ v0.2.0
  * Changelog added
  * Refactoring done to match OXPS standards
  * Added JSON pretty print option support
+ * Adjusted dashboard styles
+ 
