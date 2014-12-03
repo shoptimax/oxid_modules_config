@@ -36,7 +36,7 @@ $aModule = array(
     'id'          => 'oxpsmodulesconfig',
     'title'       => 'OXID Module Configuration Im-/Exporter',
     'description' => array(
-        'de' => '[TR - Tools to export, backup and import OXID eShop modules configuration data.]',
+        'de' => 'Tools, um OXID eShop Modulkonfigurationsdaten zu exportieren, importieren oder zu sichern.',
         'en' => 'Tools to export, backup and import OXID eShop modules configuration data.',
     ),
     'thumbnail'   => 'out/pictures/oxpsmodulesconfig.png',
