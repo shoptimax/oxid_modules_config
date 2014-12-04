@@ -4,3 +4,5 @@
 # Tests output to ignore
 certification/
 coverage/
+metrics.txt
+metrics.xml
