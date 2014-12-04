@@ -1,3 +1,7 @@
+# The module is now on [GitHub](https://github.com/druteika/oxid_modules_config).
+
+----
+
 # OXID Module Configuration Im-/Exporter
 
 ----
