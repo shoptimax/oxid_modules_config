@@ -1,0 +1,417 @@
+Meta:
+    sDefaultsVersion: "1.0"
+GeneralShopSettings:
+    aCachableClasses:
+        - info
+        - start
+        - details
+        - alist
+        - vendorlist
+    aCacheViews:
+        - start
+        - alist
+        - details
+    aCMSfolder:
+        CMSFOLDER_EMAILS: '#706090'
+        CMSFOLDER_USERINFO: '#303030'
+        CMSFOLDER_NONE: '#904040'
+    aCurrencies:
+        - 'EUR@ 1.00@ ,@ .@ €@ 2'
+        - 'GBP@ 0.8565@ .@  @ £@ 2'
+        - 'CHF@ 1.4326@ ,@ .@ <small>CHF</small>@ 2'
+        - 'USD@ 1.2994@ .@  @ $@ 2'
+    aDetailImageSizes:
+        oxpic1: '380*340'
+        oxpic2: '380*340'
+        oxpic3: '380*340'
+        oxpic4: '380*340'
+        oxpic5: '380*340'
+        oxpic6: '380*340'
+        oxpic7: '380*340'
+        oxpic8: '380*340'
+        oxpic9: '380*340'
+        oxpic10: '380*340'
+        oxpic11: '380*340'
+        oxpic12: '380*340'
+    aDisabledModules:
+        - oepaypal
+        - oethemeswitcher
+        - oxpspaymorrow
+    aHomeCountry:
+        - a7c40f631fc920687.20179984
+    aInterfaceProfiles:
+        Standard: '10'
+        1024x768: '10'
+        1280x1024: '17'
+        1600x1200: '22'
+    aLanguageParams:
+        de:
+            baseId: 0
+            active: '1'
+            sort: '1'
+            default: '1'
+            o2c_idlang: 1
+        en:
+            baseId: 1
+            active: '0'
+            sort: '2'
+    aLanguages:
+        de: Deutsch
+        en: English
+    aLanguageSSLURLs:
+        - ''
+        - null
+    aLanguageURLs:
+        - ''
+        - null
+    aLexwareVAT:
+        1: '15'
+        2: '7'
+        3: '16'
+        4: '20'
+        5: '10'
+    aLogSkipTags: {  }
+    aModules:
+        order:
+            - oe/oepaypal/controllers/oepaypalorder
+        oxaddress:
+            - oe/oepaypal/models/oepaypaloxaddress
+        oxarticle:
+            - oe/oepaypal/models/oepaypaloxarticle
+        oxbasket:
+            - oe/oepaypal/models/oepaypaloxbasket
+        oxcmp_basket:
+            - oe/oepaypal/components/oepaypaloxcmp_basket
+        oxorder:
+            - oe/oepaypal/models/oepaypaloxorder
+        oxuser:
+            - oe/oepaypal/models/oepaypaloxuser
+        oxviewconfig:
+            - oe/oepaypal/core/oepaypaloxviewconfig
+        oxwarticledetails:
+            - oe/oepaypal/components/widgets/oepaypaloxwarticledetails
+        payment:
+            - oe/oepaypal/controllers/oepaypalpayment
+    aMustFillFields:
+        - oxuser__oxfname
+        - oxuser__oxlname
+        - oxuser__oxstreet
+        - oxuser__oxstreetnr
+        - oxuser__oxzip
+        - oxuser__oxcity
+        - oxuser__oxcountryid
+        - oxaddress__oxfname
+        - oxaddress__oxlname
+        - oxaddress__oxstreet
+        - oxaddress__oxstreetnr
+        - oxaddress__oxzip
+        - oxaddress__oxcity
+        - oxaddress__oxcountryid
+    aOrderfolder:
+        ORDERFOLDER_NEW: '#0000FF'
+        ORDERFOLDER_FINISHED: '#0A9E18'
+        ORDERFOLDER_PROBLEMS: '#FF0000'
+    aSearchCols:
+        - oxtitle
+        - oxshortdesc
+        - oxsearchkeys
+        - oxartnum
+        - oxtags
+    aSEOReservedWords:
+        - admin
+        - core
+        - export
+        - modules
+        - out
+        - setup
+        - views
+    aSkipTags:
+        - der
+        - die
+        - das
+        - was
+        - wie
+        - wer
+        - in
+        - sie
+        - du
+        - aus
+        - von
+        - des
+        - hat
+        - einen
+        - eine
+        - ist
+        - einem
+        - dann
+        - haben
+        - dieser
+        - dieser
+        - dem
+        - sich
+        - er
+        - ich
+        - was
+        - für
+        - und
+        - nur
+        - auf
+        - an
+        - this
+        - that
+        - if
+        - you
+        - the
+    aSortCols:
+        - oxtitle
+        - oxvarminprice
+    blAllowNegativeStock: '1'
+    blAllowUnevenAmounts: ''
+    blAutoIcons: '1'
+    blAutoSearchOnCat: ''
+    blBasketExcludeEnabled:
+        str: '0'
+    blBidirectCross: ''
+    blCalculateDelCostIfNotLoggedIn: ''
+    blCheckForUpdates: '1'
+    blCheckTemplates: '1'
+    blClearCacheOnLogout: ''
+    blConfirmAGB: ''
+    blDeliveryVatOnTop: ''
+    blDisableNavBars: ''
+    blDontShowEmptyCategories: ''
+    blEnableDownloads: '1'
+    blEnableSeoCache: '1'
+    blEnterNetPrice: ''
+    blExclNonMaterialFromDelivery: ''
+    blExpirationEmailSent: '1'
+    blFacebookConfirmEnabled: '1'
+    blFbCommentsEnabled:
+        str: '0'
+    blFbFacepileEnabled:
+        str: '0'
+    blFbInviteEnabled:
+        str: '0'
+    blFbLikeEnabled:
+        str: '0'
+    blFbShareEnabled:
+        str: '0'
+    blGBModerate: ''
+    blInlineImgEmail: ''
+    blInvitationsEnabled:
+        str: '0'
+    blLoadDynContents: 'true'
+    blLoadVariants: '1'
+    blLogChangesInAdmin: ''
+    blLogging: ''
+    blMallCustomPrice: '1'
+    blMallPriceAdditionPercent: '1'
+    blNewArtByInsert: '1'
+    blOrderDisWithoutReg: ''
+    blOrderOptInEmail: '1'
+    blOtherCountryOrder: '1'
+    blOverrideZeroABCPrices: ''
+    blPaymentVatOnTop: ''
+    blPerfNoBasketSaving: ''
+    blPsBasketReservationEnabled:
+        str: '0'
+    blPsLoginEnabled:
+        str: '0'
+    blSearchUseAND: ''
+    blShippingCountryVat: ''
+    blShopStopped: '1'
+    blShowCookiesNotification: ''
+    blShowNetPrice: ''
+    blShowOrderButtonOnTop: ''
+    blShowRememberMe: '1'
+    blShowSorting: '1'
+    blShowTags: '1'
+    blShowVariantReviews: ''
+    blShowVATForDelivery: '1'
+    blShowVATForPayCharge: '1'
+    blShowVATForWrapping: ''
+    blSkipDebitOldBankInfo: ''
+    blStockOffDefaultMessage: '1'
+    blStockOnDefaultMessage: '1'
+    blStoreCreditCardInfo: ''
+    blStoreIPs: ''
+    blUseLDAP: ''
+    blUseMultidimensionVariants: '1'
+    blUseStock: '1'
+    blUseTimeCheck: ''
+    blVariantInheritAmountPrice: ''
+    blVariantParentBuyable: ''
+    blVariantsSelection: ''
+    blVatIdCheckDisabled: ''
+    blWarnOnSameArtNums: '1'
+    blWrappingVatOnTop: ''
+    bl_perfCalcVatOnlyForBasketOrder: ''
+    bl_perfLoadAccessoires: '1'
+    bl_perfLoadAktion: '1'
+    bl_perfLoadAttributes: ''
+    bl_perfLoadCatTree: '1'
+    bl_perfLoadCrossselling: '1'
+    bl_perfLoadCurrency: '1'
+    bl_perfLoadCustomerWhoBoughtThis: '1'
+    bl_perfLoadDelivery: '1'
+    bl_perfLoadDiscounts: '1'
+    bl_perfLoadLanguages: '1'
+    bl_perfLoadManufacturerTree: '1'
+    bl_perfLoadNews: '1'
+    bl_perfLoadNewsOnlyStart: '1'
+    bl_perfLoadPrice: '1'
+    bl_perfLoadPriceForAddList: '1'
+    bl_perfLoadReviews: '1'
+    bl_perfLoadSelectLists: ''
+    bl_perfLoadSelectListsInAList: ''
+    bl_perfLoadSimilar: '1'
+    bl_perfLoadTreeForSearch: '1'
+    bl_perfParseLongDescinSmarty: ''
+    bl_perfShowActionCatArticleCnt: ''
+    bl_perfUseSelectlistPrice: ''
+    bl_rssBargain: ''
+    bl_rssCategories: '1'
+    bl_rssNewest: '1'
+    bl_rssRecommListArts: ''
+    bl_rssRecommLists: ''
+    bl_rssSearch: '1'
+    bl_rssTopShop: '1'
+    bl_showFbConnect:
+        str: '0'
+    dDefaultVAT:
+        num: '19'
+    dPointsForInvitation: '10'
+    dPointsForRegistration: '10'
+    iAdminLogTime: '60'
+    iAttributesPercent: '70'
+    iCacheLifeTime: '36000'
+    iCntofMails: '20'
+    iDefSeoLang: '0'
+    iDownloadExpirationTime: '24'
+    iExportNrofLines: '250'
+    iExportTickerRefresh: '1'
+    iFailedOnlineCallsCount:
+        int: '0'
+    iImportNrofLines: '100'
+    iImportTickerRefresh: '1'
+    iLinkExpirationTime: '168'
+    IMA: '20000000000000'
+    iMallMode: '1'
+    iMallPriceAddition: '0'
+    iMaxDownloadsCount: '0'
+    iMaxDownloadsCountUnregistered: '1'
+    iMaxGBEntriesPerDay: '3'
+    IMD: '20000000000000'
+    iMinOrderPrice: ''
+    IMS: '1'
+    iNewestArticlesMode: '1'
+    iNrofCrossellArticles: '5'
+    iNrofCustomerWhoArticles: '5'
+    iNrofNewcomerArticles: '4'
+    iNrofSimilarArticles: '5'
+    iPsBasketReservationTimeout: '1200'
+    iRatingLogsTimeout: ''
+    iRssItemsCount: '20'
+    iServerTimeShift: ''
+    iSessionTimeout: '60'
+    iSessionTimeoutAdmin: ''
+    iSmartyPhpHandling: '0'
+    iTimeToUpdatePrices:
+        int: '1435150490'
+    iTop5Mode: '1'
+    iUseGDVersion: '2'
+    o2c_iAutoCreateFrontendUsers: '0'
+    o2c_iCache: '0'
+    o2c_iCacheLifetimeMinutes: '60'
+    o2c_iCategoryNavigationStart: '1'
+    o2c_iDebug: '0'
+    o2c_iDefaultFrontendGroupId: ''
+    o2c_iLogSoapCalls: '0'
+    o2c_iNavigationMaxDepth: ''
+    o2c_iPerPage: '25'
+    o2c_iSearchActive: '0'
+    o2c_sAuthPassword: ''
+    o2c_sAuthUsername: ''
+    o2c_sSearchCategories: '0'
+    o2c_sSoapServerAddress: 'http://cms.1-2-3.dev/contenido'
+    o2c_sUsername: sysadmin
+    o2c_sUserPassword: sysadmin
+    sAdditionalServVATCalcMethod: biggest_net
+    sCatThumbnailsize: '748*150'
+    sCntOfNewsLoaded: '1'
+    sCSVSign: ;
+    sCustomTheme: 123tv
+    sDecimalSeparator: ','
+    sDefaultImageQuality: '75'
+    sDefaultLang: '0'
+    sDownloadsDir: out/downloads
+    sFbAppId: ''
+    sFbSecretKey: ''
+    sGiCsvFieldEncloser: '"'
+    sHost: 'https://txms.gzs.de:51384/'
+    sIconsize: '87*87'
+    sLargeCustPrice: '100'
+    sLocalDateFormat: ISO
+    sLocalTimeFormat: ISO
+    sMerchantID: ''
+    sMidlleCustPrice: '40'
+    sPaymentPwd: ''
+    sPaymentUser: ''
+    sSEOSeparator: ''
+    sSEOuprefix: ''
+    sShopCountry: de
+    sShopVar: ''
+    sStockWarningLimit: '10'
+    sTagList: '1421859561'
+    sTagSeparator: ','
+    sTheme: azure
+    sThumbnailsize: '185*150'
+    sUtilModule: ''
+    sVatIdCheckInterfaceWsdl: ''
+    sZoomImageSize: '665*665'
+theme:
+    azure:
+        aDetailImageSizes:
+            oxpic1: '380*340'
+            oxpic2: '380*340'
+            oxpic3: '380*340'
+            oxpic4: '380*340'
+            oxpic5: '380*340'
+            oxpic6: '380*340'
+            oxpic7: '380*340'
+            oxpic8: '380*340'
+            oxpic9: '380*340'
+            oxpic10: '380*340'
+            oxpic11: '380*340'
+            oxpic12: '380*340'
+        aNrofCatArticles:
+            - '10'
+            - '20'
+            - '50'
+            - '100'
+        aNrofCatArticlesInGrid:
+            - '12'
+            - '16'
+            - '24'
+            - '32'
+        blShowBirthdayFields: '1'
+        blShowListDisplayType: '1'
+        bl_showCompareList: '1'
+        bl_showGiftWrapping: '1'
+        bl_showListmania: '1'
+        bl_showVouchers: '1'
+        bl_showWishlist: '1'
+        iNewBasketItemMessage:
+            select: '1'
+        iTopNaviCatCount: '4'
+        sCatIconsize: '168*100'
+        sCatPromotionsize: '370*107'
+        sCatThumbnailsize: '748*150'
+        sDefaultListDisplayType:
+            select: infogrid
+        sIconsize: '87*87'
+        sManufacturerIconsize: '100*100'
+        sStartPageListDisplayType:
+            select: infogrid
+        sThumbnailsize: '185*150'
+        sZoomImageSize: '665*665'
