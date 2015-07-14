@@ -1,0 +1,9 @@
+{
+    "name": "psprojects/Myproject",
+    "license": "proprietary",
+    "type": "project",
+    "description": "My Description of my project",    
+    "require": {        
+        "symfony/yaml": "~2.6"
+    }
+}
