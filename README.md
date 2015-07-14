@@ -6,9 +6,9 @@
 
 ----
 
-Tools to export, backup and import OXID eShop modules configuration data.
-It is a GUI based dashboard in eShop administration area under _Service -> Module Configuration Im-/Exporter_.
-All relevant modules configuration is being used including: Versions, Extended classes, Module classes, Templates, Blocks, Settings and Events.
+Tools to export, backup and import OXID eShop modules, module settings, shop settings and module activation.
+It is a GUI based dashboard in eShop administration area under _Service -> Module Configuration Im-/Exporter_. Additionally, there are OXID console commands for the same purpose.
+All relevant modules configuration is being used including: Versions, Extended classes, Module classes, Templates, Blocks, Settings and Events. 
 
 ## Installation
  - Copy the content of `copy_this/` folder to OXID eShop root folder
