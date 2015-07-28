@@ -1,5 +1,5 @@
 Meta:
-    sDefaultsVersion: "1.0"
+    sDefaultsVersion: "1.1"
 GeneralShopSettings:
     aCachableClasses:
         - info
@@ -320,22 +320,6 @@ GeneralShopSettings:
         int: '1435150490'
     iTop5Mode: '1'
     iUseGDVersion: '2'
-    o2c_iAutoCreateFrontendUsers: '0'
-    o2c_iCache: '0'
-    o2c_iCacheLifetimeMinutes: '60'
-    o2c_iCategoryNavigationStart: '1'
-    o2c_iDebug: '0'
-    o2c_iDefaultFrontendGroupId: ''
-    o2c_iLogSoapCalls: '0'
-    o2c_iNavigationMaxDepth: ''
-    o2c_iPerPage: '25'
-    o2c_iSearchActive: '0'
-    o2c_sAuthPassword: ''
-    o2c_sAuthUsername: ''
-    o2c_sSearchCategories: '0'
-    o2c_sSoapServerAddress: 'http://cms.1-2-3.dev/contenido'
-    o2c_sUsername: sysadmin
-    o2c_sUserPassword: sysadmin
     sAdditionalServVATCalcMethod: biggest_net
     sCatThumbnailsize: '748*150'
     sCntOfNewsLoaded: '1'

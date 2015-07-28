@@ -114,64 +114,83 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
 
         $aConfigValues = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll($sSql);
         $aGroupedValues = $this->groupValues($aConfigValues);
+        $this->addShopConfig($aGroupedValues, $aConfigFields, $blInclude_mode);
         $aGroupedValues = $this->withoutDefaults($aGroupedValues);
 
         return $aGroupedValues;
     }
 
+    protected function addShopConfig(& $aGroupedValues, $aConfigFields, $blInclude_mode)
+    {
+        $aShops = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll('SELECT * FROM oxshops ORDER BY oxid asc');
+        foreach ($aShops as $aShop) {
+            $id = $aShop['OXID'];
+            unset ($aShop['OXID']);
+            unset ($aShop['OXTIMESTAMP']);
+            foreach ($aShop as $sVarName => $sVarValue) {
+                $blFieldConfigured = array_key_exists($sVarName, $aConfigFields);
+                $blIncludeFiled = $blInclude_mode && $blFieldConfigured;
+                $blIncludeFiled = $blIncludeFiled || (!$blInclude_mode && !$blFieldConfigured);
+                if ($blIncludeFiled) {
+                    $aGroupedValues[$id]['oxshops'][$sVarName] = $sVarValue;
+                }
+            }
+        }
+    }
+
     protected function withoutDefaults(&$aGroupedValues)
     {
-        foreach($aGroupedValues as $sShopId => &$aShopConfig) {
+        foreach ($aGroupedValues as $sShopId => &$aShopConfig) {
 
             $aModuleConfigs = &$aShopConfig['module'];
 
             /** @var oxModule $oModule */
             $oModule = oxNew('oxModule');
 
-            if(isset($aModuleConfigs)){
-            foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
+            if (isset($aModuleConfigs)) {
+                foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
 
-                if (!$oModule->load($sModuleId)) {
-                    $oDebugOutput = $this->getDebugOutput();
-                    $oDebugOutput->writeLn("[DEBUG] {$sModuleId} does not exist - skipping");
-                    continue;
-                }
-                $aDefaultModuleSettings = $oModule->getInfo("settings");
-                foreach($aDefaultModuleSettings as $aConfigValue) {
-                    $sVarName = $aConfigValue['name'];
-                    $sDefaultType = $aConfigValue['type'];
-                    $mDefaultValue = $aConfigValue['value'];
+                    if (!$oModule->load($sModuleId)) {
+                        $oDebugOutput = $this->getDebugOutput();
+                        $oDebugOutput->writeLn("[DEBUG] {$sModuleId} does not exist - skipping");
+                        continue;
+                    }
+                    $aDefaultModuleSettings = $oModule->getInfo("settings");
+                    foreach ($aDefaultModuleSettings as $aConfigValue) {
+                        $sVarName = $aConfigValue['name'];
+                        $sDefaultType = $aConfigValue['type'];
+                        $mDefaultValue = $aConfigValue['value'];
 
-                    $mCurrentValue = $aModuleConfig[$sVarName];
+                        $mCurrentValue = $aModuleConfig[$sVarName];
 
-                    if($sDefaultType == 'bool') {
-                        if($mDefaultValue === 'false'){
-                            $mDefaultValue = '';
-                        }else{
-                            $mDefaultValue = $mDefaultValue ? '1' : '' ;
+                        if ($sDefaultType == 'bool') {
+                            if ($mDefaultValue === 'false') {
+                                $mDefaultValue = '';
+                            } else {
+                                $mDefaultValue = $mDefaultValue ? '1' : '';
+                            }
+                        }
+
+                        if ($mCurrentValue === $mDefaultValue) {
+                            unset($aModuleConfig[$sVarName]);
+                            if (count($aModuleConfig) == 0) {
+                                unset($aModuleConfigs[$sModuleId]);
+                            }
                         }
                     }
-
-                    if ($mCurrentValue === $mDefaultValue) {
-                        unset($aModuleConfig[$sVarName]);
-                        if( count($aModuleConfig)==0){
-                            unset($aModuleConfigs[$sModuleId]);
-                        }
-                    }
                 }
-            }
             }
             $aDefaultGeneralConfig = $this->aDefaultConfig[$this->sNameForGeneralShopSettings];
             $aGeneralConfig = &$aShopConfig[$this->sNameForGeneralShopSettings];
             foreach ($aGeneralConfig as $sVarName => $mCurrentValue) {
                 $mDefaultValue = $aDefaultGeneralConfig[$sVarName];
-                if($mCurrentValue === $mDefaultValue) {
+                if ($mCurrentValue === $mDefaultValue) {
                     unset($aGeneralConfig[$sVarName]);
                 }
             }
 
-            $aCurrentThemeConfigs = &$aShopConfig['theme'];
-            if($aCurrentThemeConfigs) {
+            if (array_key_exists('theme', $aShopConfig)) {
+                $aCurrentThemeConfigs = &$aShopConfig['theme'];
                 $aDefaultThemeConfigs = $this->aDefaultConfig['theme'];
                 foreach ($aCurrentThemeConfigs as $sTheme => &$aThemeConfig) {
                     $aDefaultThemeConfig = $aDefaultThemeConfigs[$sTheme];
@@ -180,7 +199,7 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                             $mDefaultValue = $aDefaultThemeConfig[$sVarName];
                             if ($mCurrentValue === $mDefaultValue) {
                                 unset($aThemeConfig[$sVarName]);
-                                if( count($aThemeConfig)==0){
+                                if (count($aThemeConfig) == 0) {
                                     unset($aCurrentThemeConfigs[$sTheme]);
                                 }
                             }
@@ -207,9 +226,8 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
             $sSection = $aParts[0];
             $sModule = $aParts[1];
 
-            if (in_array($sVarName,
-                ['aDisabledModules'])) {
-                if($sVarType !== 'arr') {
+            if (in_array($sVarName, ['aDisabledModules'])) {
+                if ($sVarType !== 'arr') {
                     $this->oOutput->writeLn("[error] $sVarName corrupted vartype: '$sVarType' converted to arr");
                     $sVarType = 'arr';
                 }
@@ -217,31 +235,30 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
 
             if (in_array($sVarType, ['aarr', 'arr'])) {
                 $mVarValue = unserialize($mVarValue);
-                if(! is_array($mVarValue)) {
+                if (!is_array($mVarValue)) {
                     $this->oOutput->writeLn("[error] $sVarName is not array: '$mVarValue' convert to empty array");
                     $mVarValue = array();
                 }
             }
 
-
             if (!$sModule) {
-
-                if($sVarName === 'aModuleVersions') {
+                if ($sVarName === 'aModuleVersions') {
                     //aModuleVersions is needed to compare the version on config import so you can be warned
                     //if the import does not match the code version and may be wrong or have wrong assumptions
                     // about module defaults
                 }
 
                 //restored from module metadata by import:
-                if (in_array($sVarName,
-                    ['aModuleFiles', 'aModuleEvents', 'aModuleTemplates', 'aModulePaths'])) {
+                if (in_array(
+                    $sVarName,
+                    ['aModuleFiles', 'aModuleEvents', 'aModuleTemplates', 'aModulePaths']
+                )) {
                     continue;
                 }
 
                 //force conversation to normal arrays and sort values, this is needed because sometime this arrays
                 //becomes associative arrays when oxid shop modifies them. {'1'=>'oepaypal'} to [oepaypal]
-                if (in_array($sVarName,
-                    ['aDisabledModules'])) {
+                if (in_array($sVarName, ['aDisabledModules'])) {
                     $mVarValue = array_values($mVarValue);
                     sort($mVarValue);
                 }
@@ -262,18 +279,17 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
 
                 // the following options can be sorted so they have a stable order between exports,
                 // that makes merging easier
-                if (in_array($sVarName,
-                    ['aModules'])) {
+                if (in_array($sVarName, ['aModules'])) {
                     ksort($mVarValue);
                 }
 
-                $mVarValue = $this->varValueWithTypeInfo($sVarName,$mVarValue,$sVarType);
+                $mVarValue = $this->varValueWithTypeInfo($sVarName, $mVarValue, $sVarType);
                 $sSection = $this->sNameForGeneralShopSettings;
                 $aGroupedValues[$sShopId][$sSection][$sVarName] =
                     $mVarValue;
             } else {
-                if($sSection != 'module') {
-                    $mVarValue = $this->varValueWithTypeInfo($sVarName,$mVarValue,$sVarType);
+                if ($sSection != 'module') {
+                    $mVarValue = $this->varValueWithTypeInfo($sVarName, $mVarValue, $sVarType);
                 }
                 $aGroupedValues[$sShopId][$sSection][$sModule][$sVarName] =
                     $mVarValue;

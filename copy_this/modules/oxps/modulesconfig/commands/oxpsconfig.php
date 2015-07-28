@@ -24,6 +24,8 @@ return [
         'oxps123TvMISEnvironment', //environment dependent
         'oxps123PaymentsTesting',
         'aSerials', //oxid serial number. Must be different on live system.
+        'sMallShopURL',
+        'sMallSSLShopURL',
         /* Paypal development settings */
         'blOEPayPalSandboxMode',
         'blPayPalLoggerEnabled',
@@ -36,11 +38,26 @@ return [
         /* Factfinder development settings */
         'swFF.authentication.password',
         'swFF.authentication.username',
+        'swFF.context',
         /* END Factfinder END */
+
+        /* contenido cms */
+        'o2c_sSoapServerAddress',
     ],
     'env' => [
+        //'develop' => [
+            //'dir' => dirname(__DIR__) . '/../../config/$env' is default
+        //],
+
+        /* map other environments to existing ones */
         'develop' => [
-            'dir' => dirname(__DIR__) . '/../../config/develop',
+            'dir' => dirname(__DIR__) . '/../../config/development',
+        ],
+        'merge-request' => [
+            'dir' => dirname(__DIR__) . '/../../config/integration',
+        ],
+        'testing' => [
+            'dir' => dirname(__DIR__) . '/../../config/integration',
         ]
     ],
 ];

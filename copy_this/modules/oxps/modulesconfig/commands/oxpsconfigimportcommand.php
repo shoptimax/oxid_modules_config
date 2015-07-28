@@ -107,7 +107,7 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         if ($oInput->hasOption(array('e', 'env'))) {
             $this->sEnv = $oInput->getOption(array('e', 'env'));
         } else {
-            $this->sEnv = 'develop';
+            $this->sEnv = 'development';
         }
         $this->initConfiguration();
         $this->setDebugOutput($oOutput);
@@ -126,34 +126,71 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
         $aShops = $aMetaConfig['shops'];
         foreach ($aShops as $sShop => $sFileName) {
+            $this->sShopId = $sShop;
             $this->runShopConfigImport($sShop, $sFileName);
         }
 
         $this->getDebugOutput()->writeLn("done");
     }
 
+    /**
+     * runShopConfigImport
+     * @param $sShop
+     * @param $sRelativeFileName
+     * @throws Exception
+     */
     protected function runShopConfigImport($sShop, $sRelativeFileName)
     {
-        $this->oOutput->writeLn("Importing default config");
-        $this->importConfigValues($sShop, $this->aDefaultConfig, true);
 
         $sFileName = $this->getConfigDir() . $sRelativeFileName;
-        $this->importConfigFile($sShop, $sFileName);
+        $aResult = $this->readConfigValues($sFileName);
+
+        $aResult = $this->merge_config($this->aDefaultConfig, $aResult);
 
         if ($this->sEnv) {
             $sEnvDirName = $this->getEnviromentConfigDir();
             $sFileName = $sEnvDirName . $sRelativeFileName;
-            $this->importConfigFile($sShop, $sFileName);
+            $aEnvConfig = $this->readConfigValues($sFileName);
+            $aResult = $this->merge_config($aResult, $aEnvConfig);
         }
+
+        $this->oOutput->writeLn("Importing config for shop $sShop");
+
+        $this->importConfigValues($aResult, true);
     }
 
-    protected function importConfigFile($sShop, $sFileName)
+    /**
+     * merge tow config arrays
+     * @param $array1
+     * @param $array2
+     */
+    protected function merge_config($aBase, $aOverride)
     {
-        $aResult = $this->readConfigValues($sFileName);
-
-        $this->oOutput->writeLn("Importing shop config file $sFileName");
-        $this->importConfigValues($sShop, $aResult);
-
+        foreach ($aOverride as $key => $mOverriderValue) {
+            if (is_array($mOverriderValue)) {
+                $aBaseValue = $aBase[$key];
+                if ($aBaseValue) {
+                    if (is_array($aBaseValue)) {
+                        if ($key == 'module') {
+                            foreach ($mOverriderValue as $sModuleId => $aModuleInfo) {
+                                if ($aBaseValue[$sModuleId]) {
+                                    $aBaseValue[$sModuleId] = array_merge($aBaseValue[$sModuleId], $aModuleInfo);
+                                } else {
+                                    $aBaseValue[$sModuleId] = $aModuleInfo;
+                                }
+                            }
+                            $mOverriderValue = $aBaseValue;
+                        } else {
+                            $mOverriderValue = array_merge($aBaseValue, $mOverriderValue);
+                        }
+                    } else {
+                        $this->oOutput->writeLn("Corrupted config value $key for shop " . $this->sShopId);
+                    }
+                }
+            }
+            $aBase[$key] = $mOverriderValue;
+        }
+        return $aBase;
     }
 
     protected function getEnviromentConfigDir()
@@ -205,6 +242,8 @@ class OxpsConfigImportCommand extends oxConsoleCommand
      */
     protected function readConfigValues($sFileName, $sType = null)
     {
+        $this->oOutput->writeLn("Reading shop config file $sFileName");
+
         if ($sType == null) {
             $sType = $this->aConfiguration['type'];
         }
@@ -268,17 +307,58 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         return $this->oDebugOutput;
     }
 
+    protected function importShopsConfig($aConfigValues, $blRestoreModuleDefaults)
+    {
+        /**
+         * @var oxshop $oShop
+         */
+        $oShop = oxNew("oxshop");
+        $sShopId = $this->sShopId;
+        if (!$oShop->load($sShopId)) {
+            $this->oOutput->writeLn("[WARN] Creating new shop $sShopId");
+            $oShop->setId($sShopId);
+            $oConfig = oxSpecificShopConfig::get(1);
+            $oConfig->saveShopConfVar(
+                'arr',
+                'aModules',
+                [],
+                $sShopId,
+                ""
+            );
+        }
+        $aOxShopSettings = $aConfigValues['oxshops'];
+        if ($aOxShopSettings) {
+            $oShop->assign($aOxShopSettings);
+            $oShop->save();
+            for ($i = 1; $i <= 3; $i++) {
+                $oShop->setLanguage($i);
+                foreach ($aOxShopSettings as $sVarName => $mVarValue) {
+                    $iPosLastChar = strlen($sVarName) - 1;
+                    $iPosUnderscore = $iPosLastChar - 1;
+                    if ($sVarName[$iPosUnderscore] == '_' && $sVarName[$iPosLastChar] == $i) {
+                        $sFiledName = substr($sVarName, 0, strlen($sVarName) - 2);
+                        $aOxShopSettings[$sFiledName] = $mVarValue;
+                    }
+                }
+                $oShop->assign($aOxShopSettings);
+                $oShop->save();
+            }
+        }
+    }
+
+
     /*
      * @param string $sShopId
      * @param array $aConfigValues
      * @param bool $blRestoreModuleDefaults
      */
-    protected function importConfigValues($sShopId, $aConfigValues, $blRestoreModuleDefaults = false)
+    protected function importConfigValues($aConfigValues, $blRestoreModuleDefaults = false)
     {
+        $sShopId = $this->sShopId;
+        $this->importShopsConfig($aConfigValues, $blRestoreModuleDefaults);
 
         $oConfig = oxSpecificShopConfig::get($sShopId);
         $this->oConfig = $oConfig;
-        $this->sShopId = $sShopId;
 
         /** @var oxModuleStateFixer $oModuleStateFixer */
         $oModuleStateFixer = oxRegistry::get('oxModuleStateFixer');
@@ -288,7 +368,7 @@ class OxpsConfigImportCommand extends oxConsoleCommand
 
         $oxModuleList = oxNew('oxModuleList');
         //only do the following on the first run when $blRestoreModuleDefaults = true
-        if($blRestoreModuleDefaults) {
+        if ($blRestoreModuleDefaults) {
             //this will scan the module directory and add all modules (module paths),
             //that is something fixstates does not do.
             //this must be done before aDisabledModules is restored because this function deaktivate modules
@@ -298,15 +378,26 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
 
             $aModules = $oxModuleList->getList();
-            foreach($aModules as $sModuleId => $oModule) {
+            foreach ($aModules as $sModuleId => $oModule) {
                 // restore default module settings
                 /** @var oxModule $oModule */
                 $aDefaultModuleSettings = $oModule->getInfo("settings");
-                foreach ($aDefaultModuleSettings as $aValue) {
-                    $sVarName = $aValue["name"];
-                    $mVarValue = $aValue["value"];
-                    $this->oConfig->setConfigParam($sVarName, $mVarValue);
+                if ($aDefaultModuleSettings) {
+                    foreach ($aDefaultModuleSettings as $aValue) {
+                        $sVarName = $aValue["name"];
+                        $mVarValue = $aValue["value"];
+
+                        $oConfig->saveShopConfVar(
+                            $aValue["type"],
+                            $sVarName,
+                            $mVarValue,
+                            $sShopId,
+                            "module:$sModuleId"
+                        );
+
+                    }
                 }
+
             }
         }
 
@@ -324,7 +415,6 @@ class OxpsConfigImportCommand extends oxConsoleCommand
                 $mVarValue = $aModulesTmp;
             } elseif ($sVarName == 'aModuleVersions') {
                 $aModuleVersions = $mVarValue;
-                continue;
             }
             $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
         }
@@ -340,7 +430,8 @@ class OxpsConfigImportCommand extends oxConsoleCommand
                 $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping");
                 continue;
             }
-            //save imported config and fix state
+
+            //fix state again because class chain was reseted by the import above
             $oModuleStateFixer->fix($oModule);
 
             //execute activate event
@@ -351,6 +442,8 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             if ($sCurrentVersion != $sVersion) {
                 $this->oOutput->writeLn("[ERROR] {$sModuleId} version on export" .
                     " $sVersion vs current version $sCurrentVersion");
+                $aModuleVersions[$sModuleId] = $sCurrentVersion;
+                $this->saveShopVar('aModuleVersions', $aModuleVersions, '');
             }
         }
 
@@ -418,11 +511,12 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         foreach ($aModules as $sModuleId => $aModuleSettings) {
             if (!$oModule->load($sModuleId)) {
                 $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping");
+
                 continue;
             }
             // set module config values that are explicitly included in this import
             foreach ($aModuleSettings as $sVarName => $mVarValue) {
-                $this->oConfig->setConfigParam($sVarName, $mVarValue);
+                $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId");
             }
         }
     }
