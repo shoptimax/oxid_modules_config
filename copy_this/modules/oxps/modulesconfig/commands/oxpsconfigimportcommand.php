@@ -15,61 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with OXID Console.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author    OXID Professional services
- * @link      http://www.oxid-esales.com
+ * @author        OXID Professional services
+ * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2015
  */
 
-use Symfony\Component\Yaml\Yaml;
+require_once "oxpsconfigcommandbase.php";
 
-class OxpsConfigImportCommand extends oxConsoleCommand
+
+/**
+ * Class OxpsConfigImportCommandBase
+ */
+class OxpsConfigImportCommand extends OxpsConfigCommandBase
 {
-
-    /**
-     * @var oxConfig[]
-     */
-    protected $aConfigs;
-
-    /**
-     * Configuration loaded from file
-     *
-     * @var array
-     */
-    protected $aConfiguration;
-
-    /**
-     * @var oxOutput
-     */
-    protected $oDebugOutput;
-
-    /**
-     * @var string
-     */
-    protected $sEnv = null;
-
-    /**
-     * @var oxIOutput $oOutput
-     */
-    protected $oOutput;
-
-    /**
-     * @var string
-     */
-    protected $sNameForGeneralShopSettings = "GeneralShopSettings";
-
-    protected $sNameForMetaData = "Meta";
-
-    protected $aDefaultConfig;
-
-    protected $aEnvConfig;
 
     /**
      * @var oxConfig $oConfig
      */
     protected $oConfig;
-    protected $sShopId;
-    protected $oModuleStateFixer;
 
+    /**
+     * @var int The shop id to load the config for.
+     */
+    protected $sShopId;
+
+    /**
+     * @var oxModuleStateFixer
+     */
+    protected $oModuleStateFixer;
 
     /**
      * {@inheritdoc}
@@ -96,24 +69,6 @@ class OxpsConfigImportCommand extends oxConsoleCommand
     }
 
     /**
-     * init
-     *
-     * @param oxIOutput $oOutput
-     */
-    protected function init($oOutput)
-    {
-        $this->oOutput = $oOutput;
-        $oInput = $this->getInput();
-        if ($oInput->hasOption(array('e', 'env'))) {
-            $this->sEnv = $oInput->getOption(array('e', 'env'));
-        } else {
-            $this->sEnv = 'development';
-        }
-        $this->initConfiguration();
-        $this->setDebugOutput($oOutput);
-    }
-
-    /**
      * Execute current command
      *
      * @param oxIOutput $oOutput
@@ -124,7 +79,7 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         // import environment specific config values
 
         $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
-        $aShops = $aMetaConfig['shops'];
+        $aShops      = $aMetaConfig['shops'];
         foreach ($aShops as $sShop => $sFileName) {
             $this->sShopId = $sShop;
             $this->runShopConfigImport($sShop, $sFileName);
@@ -135,23 +90,25 @@ class OxpsConfigImportCommand extends oxConsoleCommand
 
     /**
      * runShopConfigImport
+     *
      * @param $sShop
      * @param $sRelativeFileName
+     *
      * @throws Exception
      */
     protected function runShopConfigImport($sShop, $sRelativeFileName)
     {
 
         $sFileName = $this->getConfigDir() . $sRelativeFileName;
-        $aResult = $this->readConfigValues($sFileName);
+        $aResult   = $this->readConfigValues($sFileName);
 
         $aResult = $this->merge_config($this->aDefaultConfig, $aResult);
 
         if ($this->sEnv) {
             $sEnvDirName = $this->getEnviromentConfigDir();
-            $sFileName = $sEnvDirName . $sRelativeFileName;
-            $aEnvConfig = $this->readConfigValues($sFileName);
-            $aResult = $this->merge_config($aResult, $aEnvConfig);
+            $sFileName   = $sEnvDirName . $sRelativeFileName;
+            $aEnvConfig  = $this->readConfigValues($sFileName);
+            $aResult     = $this->merge_config($aResult, $aEnvConfig);
         }
 
         $this->oOutput->writeLn("Importing config for shop $sShop");
@@ -161,8 +118,11 @@ class OxpsConfigImportCommand extends oxConsoleCommand
 
     /**
      * merge tow config arrays
-     * @param $array1
-     * @param $array2
+     *
+     * @param $aBase
+     * @param $aOverride
+     *
+     * @return
      */
     protected function merge_config($aBase, $aOverride)
     {
@@ -190,129 +150,19 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             }
             $aBase[$key] = $mOverriderValue;
         }
+
         return $aBase;
     }
 
-    protected function getEnviromentConfigDir()
-    {
-        $sDir = null;
-
-        if ($this->sEnv) {
-            $sDir = $this->aEnvConfig["dir"];
-            if (!$sDir) {
-                $sDir = $this->getConfigDir() . '/' . $this->sEnv;
-            }
-            if (!is_readable($sDir)) {
-                $this->oOutput->writeLn('There is no such ' . $sDir . ' config dir. stopping');
-                exit;
-            }
-        }
-
-        return $sDir;
-    }
-
-    protected function getConfigDir()
-    {
-        return $this->aConfiguration['dir'];
-    }
-
-    protected function getShopsConfigFileName()
-    {
-        return $this->aConfiguration['dir'] . '/shops.' . $this->getFileExt();
-    }
-
-    protected function getFileExt()
-    {
-        return $this->getExportFormat();
-    }
-
-    protected function getExportFormat()
-    {
-        return $this->aConfiguration['type'];
-    }
-
     /**
-     * Read configuration from file
-     * It is being done only once. It will be stored as object property
-     *
-     * @param string $sFileName Name/path to the config file, that configure this config ex/importer
-     * @param null $sType
-     * @return array|mixed
-     * @throws Exception
+     * @param $aConfigValues
      */
-    protected function readConfigValues($sFileName, $sType = null)
-    {
-        $this->oOutput->writeLn("Reading shop config file $sFileName");
-
-        if ($sType == null) {
-            $sType = $this->aConfiguration['type'];
-        }
-        $sFileContent = file_get_contents($sFileName);
-        //$sFileContent = utf8_encode($sFileContent);
-        if ($sType == 'json') {
-            $aResults = json_decode($sFileContent, true);
-            $error = json_last_error();
-            if ($error !== JSON_ERROR_NONE) {
-                throw new Exception("invalid JSON in $sFileName $error");
-            }
-        } elseif ($sType == 'yaml') {
-            $aResults = Yaml::parse($sFileContent);
-        } else {
-            throw new Exception("unsuported config type" . $sType);
-        }
-
-        return $aResults;
-    }
-
-    /**
-     * Init configuration from file
-     *
-     * It is being done only once. It will be stored as object property
-     * after first call and will return it.
-     *
-     */
-    protected function initConfiguration()
-    {
-        $sCommandsDir = dirname(__DIR__) .
-            DIRECTORY_SEPARATOR . 'commands';
-        if ($this->aConfiguration === null) {
-            $this->aConfiguration = require $sCommandsDir . DIRECTORY_SEPARATOR . 'oxpsconfig.php';
-        }
-
-        $aAllEnvConfigs = $this->aConfiguration['env'];
-        $aEnvFields = $this->aConfiguration['envFields'];
-        foreach ($aEnvFields as $sExcludeField) {
-            $this->aConfiguration['excludeFields'][] = $sExcludeField;
-        }
-        $sFilename = $sCommandsDir . DIRECTORY_SEPARATOR . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
-        $this->aDefaultConfig = $this->readConfigValues($sFilename, 'yaml');
-        $aEnvConfig = $aAllEnvConfigs[$this->sEnv];
-        $this->aEnvConfig = $aEnvConfig;
-    }
-
-    /**
-     * @param oxIOutput $oOutput
-     */
-    protected function setDebugOutput(oxIOutput $oOutput)
-    {
-        $oDebugOutput = $this->getInput()->hasOption(array('n', 'no-debug')) ? oxNew('oxNullOutput') : $oOutput;
-        $this->oDebugOutput = $oDebugOutput;
-    }
-
-    /**
-     * @return oxIOutput
-     */
-    protected function getDebugOutput()
-    {
-        return $this->oDebugOutput;
-    }
-
-    protected function importShopsConfig($aConfigValues, $blRestoreModuleDefaults)
+    protected function importShopsConfig($aConfigValues)
     {
         /**
          * @var oxshop $oShop
          */
-        $oShop = oxNew("oxshop");
+        $oShop   = oxNew("oxshop");
         $sShopId = $this->sShopId;
         if (!$oShop->load($sShopId)) {
             $this->oOutput->writeLn("[WARN] Creating new shop $sShopId");
@@ -333,10 +183,10 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             for ($i = 1; $i <= 3; $i++) {
                 $oShop->setLanguage($i);
                 foreach ($aOxShopSettings as $sVarName => $mVarValue) {
-                    $iPosLastChar = strlen($sVarName) - 1;
+                    $iPosLastChar   = strlen($sVarName) - 1;
                     $iPosUnderscore = $iPosLastChar - 1;
                     if ($sVarName[$iPosUnderscore] == '_' && $sVarName[$iPosLastChar] == $i) {
-                        $sFiledName = substr($sVarName, 0, strlen($sVarName) - 2);
+                        $sFiledName                   = substr($sVarName, 0, strlen($sVarName) - 2);
                         $aOxShopSettings[$sFiledName] = $mVarValue;
                     }
                 }
@@ -345,7 +195,6 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             }
         }
     }
-
 
     /*
      * @param string $sShopId
@@ -357,14 +206,13 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         $sShopId = $this->sShopId;
         $this->importShopsConfig($aConfigValues, $blRestoreModuleDefaults);
 
-        $oConfig = oxSpecificShopConfig::get($sShopId);
+        $oConfig       = oxSpecificShopConfig::get($sShopId);
         $this->oConfig = $oConfig;
 
         /** @var oxModuleStateFixer $oModuleStateFixer */
         $oModuleStateFixer = oxRegistry::get('oxModuleStateFixer');
         $oModuleStateFixer->setConfig($oConfig);
         $this->oModuleStateFixer = $oModuleStateFixer;
-
 
         $oxModuleList = oxNew('oxModuleList');
         //only do the following on the first run when $blRestoreModuleDefaults = true
@@ -384,7 +232,7 @@ class OxpsConfigImportCommand extends oxConsoleCommand
                 $aDefaultModuleSettings = $oModule->getInfo("settings");
                 if ($aDefaultModuleSettings) {
                     foreach ($aDefaultModuleSettings as $aValue) {
-                        $sVarName = $aValue["name"];
+                        $sVarName  = $aValue["name"];
                         $mVarValue = $aValue["value"];
 
                         $oConfig->saveShopConfVar(
@@ -394,22 +242,20 @@ class OxpsConfigImportCommand extends oxConsoleCommand
                             $sShopId,
                             "module:$sModuleId"
                         );
-
                     }
                 }
-
             }
         }
 
         $aModuleVersions = [];
 
         $aGeneralSettings = $aConfigValues[$this->sNameForGeneralShopSettings];
-        $sSectionModule = '';
+        $sSectionModule   = '';
         foreach ($aGeneralSettings as $sVarName => $mVarValue) {
             if ($sVarName == 'aModules') {
                 $aModulesTmp = [];
                 foreach ($mVarValue as $sBaseClass => $aClassNames) {
-                    $sAmpSeparatedClassNames = join('&', $aClassNames);
+                    $sAmpSeparatedClassNames  = join('&', $aClassNames);
                     $aModulesTmp[$sBaseClass] = $sAmpSeparatedClassNames;
                 }
                 $mVarValue = $aModulesTmp;
@@ -440,15 +286,15 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             }
             $sCurrentVersion = $oModule->getInfo("version");
             if ($sCurrentVersion != $sVersion) {
-                $this->oOutput->writeLn("[ERROR] {$sModuleId} version on export" .
-                    " $sVersion vs current version $sCurrentVersion");
+                $this->oOutput->writeLn(
+                    "[ERROR] {$sModuleId} version on export" .
+                    " $sVersion vs current version $sCurrentVersion"
+                );
                 $aModuleVersions[$sModuleId] = $sCurrentVersion;
                 $this->saveShopVar('aModuleVersions', $aModuleVersions, '');
             }
         }
-
     }
-
 
     protected function getTypeAndValue($sVarName, $mVarValue)
     {
@@ -459,7 +305,7 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             } elseif ($iCount > 1) {
                 $sVarType = 'aarr';
             } else {
-                $sVarType = key($mVarValue);
+                $sVarType  = key($mVarValue);
                 $mVarValue = $mVarValue[$sVarType];
             }
         } elseif (is_array($mVarValue)) {
@@ -471,6 +317,7 @@ class OxpsConfigImportCommand extends oxConsoleCommand
                 $sVarType = 'str';
             }
         }
+
         return array($sVarType, $mVarValue);
     }
 
@@ -490,15 +337,15 @@ class OxpsConfigImportCommand extends oxConsoleCommand
         );
     }
 
-
     protected function is_assoc_array($arr)
     {
         return is_array($arr) && (array_keys($arr) !== range(0, count($arr) - 1));
     }
 
     /**
-     * @param array $aSectionData
+     * @param array    $aSectionData
      * @param oxModule $oModule
+     *
      * @return array
      */
     protected function importModuleConfig($aModules)
@@ -538,5 +385,4 @@ class OxpsConfigImportCommand extends oxConsoleCommand
             }
         }
     }
-
 }

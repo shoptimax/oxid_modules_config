@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'dir' => dirname(__DIR__) . '/../../config',
+    'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations',
     'type' => 'yaml',
     'executeModuleActivationEvents' => false,
     //config fields that should never ever go to the config export
@@ -51,13 +51,13 @@ return [
 
         /* map other environments to existing ones */
         'develop' => [
-            'dir' => dirname(__DIR__) . '/../../config/development',
+            'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/development',
         ],
         'merge-request' => [
-            'dir' => dirname(__DIR__) . '/../../config/integration',
+            'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/integration',
         ],
         'testing' => [
-            'dir' => dirname(__DIR__) . '/../../config/integration',
+            'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/testing',
         ]
     ],
 ];

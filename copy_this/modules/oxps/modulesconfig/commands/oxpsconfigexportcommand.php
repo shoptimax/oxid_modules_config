@@ -15,17 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with OXID Console.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author    OXID Professional services
- * @link      http://www.oxid-esales.com
+ * @author        OXID Professional services
+ * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2015
  */
+require_once "oxpsconfigcommandbase.php";
 
 use Symfony\Component\Yaml\Yaml;
 
-#$config = (array) Yaml::parse($configPath);
-require_once __DIR__ . "/oxpsconfigimportcommand.php";
-
-class OxpsConfigExportCommand extends oxpsConfigImportCommand
+class OxpsConfigExportCommand extends OxpsConfigCommandBase
 {
 
     /**
@@ -48,8 +46,9 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
         $oOutput->writeLn();
         $oOutput->writeLn('Available options:');
         $oOutput->writeLn('  -n, --no-debug     No debug output');
+        $oOutput->writeLn('  -e, --env          Environment');
+        $oOutput->writeLn('  -s, --shop         Shop');
     }
-
 
     /**
      * Execute current command
@@ -60,12 +59,10 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
     {
         $this->init($oOutput);
 
-        // get config values
         $aReturn = $this->getConfigValues($this->aConfiguration['excludeFields'], false);
 
         $aReturn = $this->addModuleOrder($aReturn);
 
-        // write config values to files
         $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
 
         // get environment specific config values
@@ -74,7 +71,7 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
         // write environment specific config values to files
         $this->writeDataToFileSeperatedByShop($this->getEnviromentConfigDir(), $aReturn);
 
-        $aMetaConfigFile['shops'] = $aShops;
+        $aMetaConfigFile['shops']                 = $aShops;
         $aMetaConfigFile[$this->sNameForMetaData] = $this->aDefaultConfig[$this->sNameForMetaData];
 
         $this->writeDataToFile($this->getShopsConfigFileName(), $aMetaConfigFile);
@@ -82,10 +79,11 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
         $this->getDebugOutput()->writeLn("done");
     }
 
-
     /**
-     * Loads the old config file read the order of modules and store it
+     * Loads the old config file, reads the order of modules and store it
+     *
      * @param $aReturn
+     *
      * @return mixed
      */
     protected function addModuleOrder($aReturn)
@@ -93,44 +91,48 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
         return $aReturn;
     }
 
-
-    /*
+    /**
      * @param array $aConfigFields
-     * @param bool $blInclude_mode if true include the fields, else exclude them.
+     * @param bool  $blIncludeMode if true include the fields, else exclude them.
+     *
      * @return array
      */
-    protected function getConfigValues($aConfigFields, $blInclude_mode)
+    protected function getConfigValues($aConfigFields, $blIncludeMode)
     {
-
-
-        $sIncludeMode = $blInclude_mode ? '' : 'NOT';
-        $sSql = "SELECT oxvarname, oxvartype, %s as oxvarvalue, oxmodule, oxshopid from oxconfig
+        $sIncludeMode = $blIncludeMode ? '' : 'NOT';
+        $sSql         = "SELECT oxvarname, oxvartype, %s as oxvarvalue, oxmodule, oxshopid from oxconfig
                  WHERE oxvarname $sIncludeMode IN ('%s') order by oxshopid asc, oxmodule ASC, oxvarname ASC";
+
         $sSql = sprintf(
             $sSql,
             oxRegistry::getConfig()->getDecodeValueQuery(),
             implode("', '", $aConfigFields)
         );
 
-        $aConfigValues = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll($sSql);
+        $aConfigValues  = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll($sSql);
         $aGroupedValues = $this->groupValues($aConfigValues);
-        $this->addShopConfig($aGroupedValues, $aConfigFields, $blInclude_mode);
+        $this->addShopConfig($aGroupedValues, $aConfigFields, $blIncludeMode);
         $aGroupedValues = $this->withoutDefaults($aGroupedValues);
 
         return $aGroupedValues;
     }
 
+    /**
+     * @param $aGroupedValues
+     * @param $aConfigFields
+     * @param $blInclude_mode
+     */
     protected function addShopConfig(& $aGroupedValues, $aConfigFields, $blInclude_mode)
     {
-        $aShops = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll('SELECT * FROM oxshops ORDER BY oxid asc');
+        $aShops = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll('SELECT * FROM `oxshops` ORDER BY oxid ASC');
         foreach ($aShops as $aShop) {
             $id = $aShop['OXID'];
             unset ($aShop['OXID']);
             unset ($aShop['OXTIMESTAMP']);
             foreach ($aShop as $sVarName => $sVarValue) {
                 $blFieldConfigured = array_key_exists($sVarName, $aConfigFields);
-                $blIncludeFiled = $blInclude_mode && $blFieldConfigured;
-                $blIncludeFiled = $blIncludeFiled || (!$blInclude_mode && !$blFieldConfigured);
+                $blIncludeFiled    = $blInclude_mode && $blFieldConfigured;
+                $blIncludeFiled    = $blIncludeFiled || (!$blInclude_mode && !$blFieldConfigured);
                 if ($blIncludeFiled) {
                     $aGroupedValues[$id]['oxshops'][$sVarName] = $sVarValue;
                 }
@@ -157,8 +159,8 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                     }
                     $aDefaultModuleSettings = $oModule->getInfo("settings");
                     foreach ($aDefaultModuleSettings as $aConfigValue) {
-                        $sVarName = $aConfigValue['name'];
-                        $sDefaultType = $aConfigValue['type'];
+                        $sVarName      = $aConfigValue['name'];
+                        $sDefaultType  = $aConfigValue['type'];
                         $mDefaultValue = $aConfigValue['value'];
 
                         $mCurrentValue = $aModuleConfig[$sVarName];
@@ -181,7 +183,7 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                 }
             }
             $aDefaultGeneralConfig = $this->aDefaultConfig[$this->sNameForGeneralShopSettings];
-            $aGeneralConfig = &$aShopConfig[$this->sNameForGeneralShopSettings];
+            $aGeneralConfig        = &$aShopConfig[$this->sNameForGeneralShopSettings];
             foreach ($aGeneralConfig as $sVarName => $mCurrentValue) {
                 $mDefaultValue = $aDefaultGeneralConfig[$sVarName];
                 if ($mCurrentValue === $mDefaultValue) {
@@ -207,7 +209,6 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                     }
                 }
             }
-
         }
 
         return $aGroupedValues;
@@ -217,14 +218,14 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
     {
         $aGroupedValues = [];
         foreach ($aConfigValues as $k => $aConfigValue) {
-            $sShopId = $aConfigValue['oxshopid'];
-            $sVarName = $aConfigValue['oxvarname'];
-            $sVarType = $aConfigValue['oxvartype'];
+            $sShopId   = $aConfigValue['oxshopid'];
+            $sVarName  = $aConfigValue['oxvarname'];
+            $sVarType  = $aConfigValue['oxvartype'];
             $mVarValue = $aConfigValue['oxvarvalue'];
-            $sModule = $aConfigValue['oxmodule'];
-            $aParts = explode(':', $sModule);
-            $sSection = $aParts[0];
-            $sModule = $aParts[1];
+            $sModule   = $aConfigValue['oxmodule'];
+            $aParts    = explode(':', $sModule);
+            $sSection  = $aParts[0];
+            $sModule   = $aParts[1];
 
             if (in_array($sVarName, ['aDisabledModules'])) {
                 if ($sVarType !== 'arr') {
@@ -266,11 +267,11 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                 //only export module info if the the order may be important
                 // (and thats the fact if there is more the one module in the string)
                 if ($sVarName == 'aModules') {
-                    $aModules = $mVarValue;
+                    $aModules    = $mVarValue;
                     $aModulesTmp = [];
                     foreach ($aModules as $sBaseClass => $sAmpSeparatedClassNames) {
                         if (strpos($sAmpSeparatedClassNames, '&') !== false) {
-                            $aClassNames = explode("&", $sAmpSeparatedClassNames);
+                            $aClassNames              = explode("&", $sAmpSeparatedClassNames);
                             $aModulesTmp[$sBaseClass] = $aClassNames;
                         }
                     }
@@ -283,8 +284,12 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                     ksort($mVarValue);
                 }
 
-                $mVarValue = $this->varValueWithTypeInfo($sVarName, $mVarValue, $sVarType);
-                $sSection = $this->sNameForGeneralShopSettings;
+                $mVarValue                                      = $this->varValueWithTypeInfo(
+                    $sVarName,
+                    $mVarValue,
+                    $sVarType
+                );
+                $sSection                                       = $this->sNameForGeneralShopSettings;
                 $aGroupedValues[$sShopId][$sSection][$sVarName] =
                     $mVarValue;
             } else {
@@ -294,8 +299,8 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                 $aGroupedValues[$sShopId][$sSection][$sModule][$sVarName] =
                     $mVarValue;
             }
-
         }
+
         return $aGroupedValues;
     }
 
@@ -321,30 +326,32 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
                 $mVarValue = array($sVarType => $mVarValue);
             }
         }
+
         return $mVarValue;
     }
 
-
     /**
      * @param string $sFileName
-     * @param array $aData
+     * @param array  $aData
      */
     protected function writeDataToFileSeperatedByShop($sDirName, $aData)
     {
         $aShops = array();
         foreach ($aData as $sShop => $aShopConfig) {
-            $sFileName = '/' . 'shop' . $sShop . '.' . $this->getFileExt();
+            $sFileName      = '/' . 'shop' . $sShop . '.' . $this->getFileExt();
             $aShops[$sShop] = $sFileName;
             $this->writeDataToFile(
                 $sDirName . $sFileName,
-                $aShopConfig);
+                $aShopConfig
+            );
         }
+
         return $aShops;
     }
 
     /**
      * @param string $sFileName
-     * @param array $aData
+     * @param array  $aData
      */
     protected function writeDataToFile($sFileName, $aData)
     {
@@ -356,10 +363,9 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
         }
     }
 
-
     /**
      * @param string $sFileName
-     * @param array $aData
+     * @param array  $aData
      */
     protected function writeToJsonFile($sFileName, $aData)
     {
@@ -379,5 +385,4 @@ class OxpsConfigExportCommand extends oxpsConfigImportCommand
             $oFile->fwrite($sData);
         }
     }
-
 }
