@@ -397,10 +397,11 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
 
     /**
      * @param $aConfigValues
-     * @return mixed
+     * @return array
      */
     protected function restoreGeneralShopSettings($aConfigValues)
     {
+        $aModuleVersions = array();
         $aGeneralSettings = $aConfigValues[$this->sNameForGeneralShopSettings];
         $sSectionModule = '';
         foreach ($aGeneralSettings as $sVarName => $mVarValue) {
