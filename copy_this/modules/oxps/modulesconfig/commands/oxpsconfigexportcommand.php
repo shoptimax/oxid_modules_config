@@ -63,20 +63,25 @@ class OxpsConfigExportCommand extends OxpsConfigCommandBase
 
         $aReturn = $this->addModuleOrder($aReturn);
 
-        $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
+        try{
+            $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
 
-        // get environment specific config values
-        $aReturn = $this->getConfigValues($this->aConfiguration['envFields'], true);
+            // get environment specific config values
+            $aReturn = $this->getConfigValues($this->aConfiguration['envFields'], true);
 
-        // write environment specific config values to files
-        $this->writeDataToFileSeperatedByShop($this->getEnviromentConfigDir(), $aReturn);
+            // write environment specific config values to files
+            $this->writeDataToFileSeperatedByShop($this->getEnviromentConfigDir(), $aReturn);
 
-        $aMetaConfigFile['shops']                 = $aShops;
-        $aMetaConfigFile[$this->sNameForMetaData] = $this->aDefaultConfig[$this->sNameForMetaData];
+            $aMetaConfigFile['shops']                 = $aShops;
+            $aMetaConfigFile[$this->sNameForMetaData] = $this->aDefaultConfig[$this->sNameForMetaData];
 
-        $this->writeDataToFile($this->getShopsConfigFileName(), $aMetaConfigFile);
+            $this->writeDataToFile($this->getShopsConfigFileName(), $aMetaConfigFile);
 
-        $this->getDebugOutput()->writeLn("done");
+            $this->getDebugOutput()->writeLn("done");
+        } catch(RuntimeException $e){
+            $this->getDebugOutput()->writeLn("Could not complete");
+            $this->getDebugOutput()->writeLn($e->getMessage());
+        }
     }
 
     /**
@@ -376,13 +381,15 @@ class OxpsConfigExportCommand extends OxpsConfigCommandBase
     /**
      * @param string $sFileName
      * @param string $sData
+     *
+     * @throws RuntimeException
      */
     protected function writeStringToFile($sFileName, $sData)
     {
         $sMode = 'w';
         if ($sFileName && $sData) {
-            $oFile = new SplFileObject($sFileName, $sMode);
-            $oFile->fwrite($sData);
+                $oFile = new SplFileObject($sFileName, $sMode);
+                    $oFile->fwrite($sData);
         }
     }
 }
