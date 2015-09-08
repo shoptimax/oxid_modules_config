@@ -219,57 +219,12 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
         $oModuleStateFixer->setConfig($oConfig);
         $this->oModuleStateFixer = $oModuleStateFixer;
 
-        $oxModuleList = oxNew('oxModuleList');
-        //only do the following on the first run when $blRestoreModuleDefaults = true
-        if ($blRestoreModuleDefaults) {
-            //this will scan the module directory and add all modules (module paths),
-            //that is something fixstates does not do.
-            //this must be done before aDisabledModules is restored because this function deaktivate modules
-            /**
-             * @var oxModuleList $oxModuleList
-             */
-            $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
-
-            $aModules = $oxModuleList->getList();
-            foreach ($aModules as $sModuleId => $oModule) {
-                // restore default module settings
-                /** @var oxModule $oModule */
-                $aDefaultModuleSettings = $oModule->getInfo("settings");
-                if ($aDefaultModuleSettings) {
-                    foreach ($aDefaultModuleSettings as $aValue) {
-                        $sVarName  = $aValue["name"];
-                        $mVarValue = $aValue["value"];
-
-                        $oConfig->saveShopConfVar(
-                            $aValue["type"],
-                            $sVarName,
-                            $mVarValue,
-                            $sShopId,
-                            "module:$sModuleId"
-                        );
-                    }
-                }
-            }
+        if($blRestoreModuleDefaults){
+            $this->restoreModuleDefaults();
         }
 
         $aModuleVersions = [];
-
-        $aGeneralSettings = $aConfigValues[$this->sNameForGeneralShopSettings];
-        $sSectionModule   = '';
-        foreach ($aGeneralSettings as $sVarName => $mVarValue) {
-            if ($sVarName == 'aModules') {
-                $aModulesTmp = [];
-                foreach ($mVarValue as $sBaseClass => $aClassNames) {
-                    $sAmpSeparatedClassNames  = join('&', $aClassNames);
-                    $aModulesTmp[$sBaseClass] = $sAmpSeparatedClassNames;
-                }
-                $mVarValue = $aModulesTmp;
-            } elseif ($sVarName == 'aModuleVersions') {
-                $aModuleVersions = $mVarValue;
-            }
-            $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
-        }
-
+        $aModuleVersions = $this->restoreGeneralShopSettings($aConfigValues);
         $this->importModuleConfig($aConfigValues['module']);
 
         $this->importThemeConfig($aConfigValues['theme'], $sShopId);
@@ -297,6 +252,44 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
                 );
                 $aModuleVersions[$sModuleId] = $sCurrentVersion;
                 $this->saveShopVar('aModuleVersions', $aModuleVersions, '');
+            }
+        }
+    }
+
+    /*
+     * Restore module defaults even if the module is not installed.
+     * This will scan the module directory and add all modules (module paths). This is something fixstates does not do.
+     * This must be done before aDisabledModules is restored because this function deactivates modules.
+     */
+    protected function restoreModuleDefaults()
+    {
+        $sShopId = $this->sShopId;
+        $oConfig = oxSpecificShopConfig::get($sShopId);
+        $oxModuleList = oxNew('oxModuleList');
+
+        /**
+         * @var oxModuleList $oxModuleList
+         */
+        $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
+
+        $aModules = $oxModuleList->getList();
+        foreach ($aModules as $sModuleId => $oModule) {
+            // restore default module settings
+            /** @var oxModule $oModule */
+            $aDefaultModuleSettings = $oModule->getInfo("settings");
+            if ($aDefaultModuleSettings) {
+                foreach ($aDefaultModuleSettings as $aValue) {
+                    $sVarName = $aValue["name"];
+                    $mVarValue = $aValue["value"];
+
+                    $oConfig->saveShopConfVar(
+                        $aValue["type"],
+                        $sVarName,
+                        $mVarValue,
+                        $sShopId,
+                        "module:$sModuleId"
+                    );
+                }
             }
         }
     }
@@ -400,5 +393,30 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
             $this->sShopId = $sShop;
             $this->runShopConfigImportForOneShop($sShop, $sFileName);
         }
+    }
+
+    /**
+     * @param $aConfigValues
+     * @return mixed
+     */
+    protected function restoreGeneralShopSettings($aConfigValues)
+    {
+        $aGeneralSettings = $aConfigValues[$this->sNameForGeneralShopSettings];
+        $sSectionModule = '';
+        foreach ($aGeneralSettings as $sVarName => $mVarValue) {
+            if ($sVarName == 'aModules') {
+                $aModulesTmp = [];
+                foreach ($mVarValue as $sBaseClass => $aClassNames) {
+                    $sAmpSeparatedClassNames = join('&', $aClassNames);
+                    $aModulesTmp[$sBaseClass] = $sAmpSeparatedClassNames;
+                }
+                $mVarValue = $aModulesTmp;
+                $mVarValue = "";
+            } elseif ($sVarName == 'aModuleVersions') {
+                $aModuleVersions = $mVarValue;
+            }
+            $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
+        }
+        return $aModuleVersions;
     }
 }
