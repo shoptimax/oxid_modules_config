@@ -80,23 +80,28 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
 
         $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
         $aShops      = $aMetaConfig['shops'];
-        foreach ($aShops as $sShop => $sFileName) {
-            $this->sShopId = $sShop;
-            $this->runShopConfigImport($sShop, $sFileName);
+        try {
+            $this->runShopConfigImportForAllShops($aShops);
+            $this->getDebugOutput()->writeLn("done");
+        } catch(\Symfony\Component\Yaml\Exception\ParseException $e){
+            $this->getDebugOutput()->writeLn("Could not complete.");
+            $this->getDebugOutput()->writeLn($e->getMessage());
+        } catch(Exception $e){
+            $this->getDebugOutput()->writeLn("Could not complete.");
+            $this->getDebugOutput()->writeLn($e->getMessage());
         }
-
-        $this->getDebugOutput()->writeLn("done");
     }
 
+
     /**
-     * runShopConfigImport
+     * runShopConfigImportForOneShop
      *
      * @param $sShop
      * @param $sRelativeFileName
      *
      * @throws Exception
      */
-    protected function runShopConfigImport($sShop, $sRelativeFileName)
+    protected function runShopConfigImportForOneShop($sShop, $sRelativeFileName)
     {
 
         $sFileName = $this->getConfigDir() . $sRelativeFileName;
@@ -383,6 +388,17 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
             foreach ($aSettings as $sVarName => $mVarValue) {
                 $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
             }
+        }
+    }
+
+    /**
+     * @param $aShops
+     */
+    protected function runShopConfigImportForAllShops($aShops)
+    {
+        foreach ($aShops as $sShop => $sFileName) {
+            $this->sShopId = $sShop;
+            $this->runShopConfigImportForOneShop($sShop, $sFileName);
         }
     }
 }

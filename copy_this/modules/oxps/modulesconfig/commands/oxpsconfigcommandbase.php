@@ -181,6 +181,8 @@ abstract class OxpsConfigCommandBase extends oxConsoleCommand
      * @param null   $sType
      *
      * @throws Exception
+     * @throws \Symfony\Component\Yaml\Exception\ParseException
+     *
      * @return array|mixed
      */
     protected function readConfigValues($sFileName, $sType = null)
