@@ -405,6 +405,7 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
         $aGeneralSettings = $aConfigValues[$this->sNameForGeneralShopSettings];
         $sSectionModule = '';
         foreach ($aGeneralSettings as $sVarName => $mVarValue) {
+            list($type,$mVarValue) = $this->getTypeAndValue($sVarName, $mVarValue);
             if ($sVarName == 'aModules') {
                 $aModulesTmp = [];
                 foreach ($mVarValue as $sBaseClass => $aClassNames) {
@@ -412,7 +413,6 @@ class OxpsConfigImportCommand extends OxpsConfigCommandBase
                     $aModulesTmp[$sBaseClass] = $sAmpSeparatedClassNames;
                 }
                 $mVarValue = $aModulesTmp;
-                $mVarValue = "";
             } elseif ($sVarName == 'aModuleVersions') {
                 $aModuleVersions = $mVarValue;
             }
