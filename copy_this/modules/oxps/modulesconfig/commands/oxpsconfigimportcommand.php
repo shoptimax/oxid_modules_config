@@ -20,8 +20,6 @@
  * @copyright (C) OXID eSales AG 2003-2015
  */
 
-require_once "oxpsconfigcommandbase.php";
-
 
 /**
  * Class OxpsConfigImportCommandBase
