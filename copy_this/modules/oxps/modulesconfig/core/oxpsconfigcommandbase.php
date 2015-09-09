@@ -2,7 +2,7 @@
 
 use Symfony\Component\Yaml\Yaml;
 
-abstract class OxpsConfigCommandBase extends oxConsoleCommand
+abstract class OxpsConfigCommandBase
 {
 
     /**
@@ -14,6 +14,11 @@ abstract class OxpsConfigCommandBase extends oxConsoleCommand
      * @var oxIOutput $oOutput The output stream, where to write the configuration.
      */
     protected $oOutput;
+
+    /*
+     * @var oxiInput $oInput The input stream with arguments
+     */
+    protected $oInput;
 
     /**
      * @var array Configuration loaded from file
@@ -45,22 +50,27 @@ abstract class OxpsConfigCommandBase extends oxConsoleCommand
      */
     protected $oDebugOutput;
 
+    public function __construct(oxIOutput $oOutput, $oInput)
+    {
+        $this->oOutput = $oOutput;
+        $this->oInput = $oInput;
+    }
+
     /**
      * Sets output stream, gets environment from commandline, init configuration and set debug output stream.
      *
      * @param oxIOutput $oOutput
+     * @param object $oInput
      */
-    protected function init($oOutput)
+    protected function init()
     {
-        $this->oOutput = $oOutput;
-        $oInput        = $this->getInput();
-        if ($oInput->hasOption(array('e', 'env'))) {
-            $this->sEnv = $oInput->getOption(array('e', 'env'));
+        if ($this->oInput->hasOption(array('e', 'env'))) {
+            $this->sEnv = $this->oInput->getOption(array('e', 'env'));
         } else {
             $this->sEnv = 'development';
         }
         $this->initConfiguration();
-        $this->setDebugOutput($oOutput);
+        $this->setDebugOutput();
     }
 
     /**
@@ -135,11 +145,10 @@ abstract class OxpsConfigCommandBase extends oxConsoleCommand
     /**
      * Setter for the debug output stream.
      *
-     * @param oxIOutput $oOutput
      */
-    protected function setDebugOutput(oxIOutput $oOutput)
+    protected function setDebugOutput()
     {
-        $oDebugOutput       = $this->getInput()->hasOption(array('n', 'no-debug')) ? oxNew('oxNullOutput') : $oOutput;
+        $oDebugOutput       = $this->oInput->hasOption(array('n', 'no-debug')) ? oxNew('oxNullOutput') : $this->oOutput;
         $this->oDebugOutput = $oDebugOutput;
     }
 

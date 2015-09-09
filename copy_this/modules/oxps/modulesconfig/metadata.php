@@ -52,6 +52,8 @@ $aModule = array(
         'oxpsmodulesconfigrequestvalidator' => 'oxps/modulesconfig/core/oxpsmodulesconfigrequestvalidator.php',
         'oxpsmodulesconfigtransfer'         => 'oxps/modulesconfig/core/oxpsmodulesconfigtransfer.php',
         'oxpsconfigcommandbase'             => 'oxps/modulesconfig/core/oxpsconfigcommandbase.php',
+        'oxpsmodulesconfigconfigexport'     => 'oxps/modulesconfig/core/oxpsmodulesconfigconfigexport.php',
+        'oxpsmodulesconfigconfigimport'     => 'oxps/modulesconfig/core/oxpsmodulesconfigconfigimport.php',
         'oxpsmodulesconfigcontent'          => 'oxps/modulesconfig/models/oxpsmodulesconfigcontent.php',
         'oxpsmodulesconfigstorage'          => 'oxps/modulesconfig/models/oxpsmodulesconfigstorage.php',
     ),
