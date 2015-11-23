@@ -387,19 +387,19 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $aModuleVersions = array();
         $aGeneralSettings = $aConfigValues[$this->sNameForGeneralShopSettings];
         $sSectionModule = '';
-        foreach ($aGeneralSettings as $sVarName => $mVarValue) {
-            list($type, $mVarValue) = $this->getTypeAndValue($sVarName, $mVarValue);
+        foreach ($aGeneralSettings as $sVarName => $mTypedVarValue) {
+            list($sType, $mVarValue) = $this->getTypeAndValue($sVarName, $mTypedVarValue);
             if ($sVarName == 'aModules') {
                 $aModulesTmp = [];
                 foreach ($mVarValue as $sBaseClass => $aClassNames) {
                     $sAmpSeparatedClassNames = join('&', $aClassNames);
                     $aModulesTmp[$sBaseClass] = $sAmpSeparatedClassNames;
                 }
-                $mVarValue = $aModulesTmp;
+                $mTypedVarValue = $aModulesTmp;
             } elseif ($sVarName == 'aModuleVersions') {
                 $aModuleVersions = $mVarValue;
             }
-            $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
+            $this->saveShopVar($sVarName, $mTypedVarValue, $sSectionModule);
         }
         return $aModuleVersions;
     }
