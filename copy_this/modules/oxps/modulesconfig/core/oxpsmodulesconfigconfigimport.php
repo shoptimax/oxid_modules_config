@@ -256,6 +256,13 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             if ($aDefaultModuleSettings) {
                 foreach ($aDefaultModuleSettings as $aValue) {
                     $sVarName = $aValue["name"];
+                    // We do not want to override with default values of fields which
+                    // are environment independent or excluded from configuration export
+                    // as this will override those values with every config import.
+                    if (in_array($sVarName, $this->aConfiguration['envFields'])
+                        || in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+                            continue;
+                        }
                     $mVarValue = $aValue["value"];
 
                     $oConfig->saveShopConfVar(
