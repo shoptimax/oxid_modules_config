@@ -207,7 +207,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     protected
     function groupValues($aConfigValues)
     {
-        $aGroupedValues = [];
+        $aGroupedValues = array();
         foreach ($aConfigValues as $k => $aConfigValue) {
             $sShopId = $aConfigValue['oxshopid'];
             $sVarName = $aConfigValue['oxvarname'];
@@ -218,14 +218,14 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             $sSection = $aParts[0];
             $sModule = $aParts[1];
 
-            if (in_array($sVarName, ['aDisabledModules'])) {
+            if (in_array($sVarName, array('aDisabledModules'))) {
                 if ($sVarType !== 'arr') {
                     $this->oOutput->writeLn("[error] $sVarName corrupted vartype: '$sVarType' converted to arr");
                     $sVarType = 'arr';
                 }
             }
 
-            if (in_array($sVarType, ['aarr', 'arr'])) {
+            if (in_array($sVarType, array('aarr', 'arr'))) {
                 $mVarValue = unserialize($mVarValue);
                 if (!is_array($mVarValue)) {
                     $this->oOutput->writeLn("[error] $sVarName is not array: '$mVarValue' convert to empty array");
@@ -243,14 +243,14 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                 //restored from module metadata by import:
                 if (in_array(
                     $sVarName,
-                    ['aModuleFiles', 'aModuleEvents', 'aModuleTemplates', 'aModulePaths']
+                    array('aModuleFiles', 'aModuleEvents', 'aModuleTemplates', 'aModulePaths')
                 )) {
                     continue;
                 }
 
                 //force conversation to normal arrays and sort values, this is needed because sometime this arrays
                 //becomes associative arrays when oxid shop modifies them. {'1'=>'oepaypal'} to [oepaypal]
-                if (in_array($sVarName, ['aDisabledModules'])) {
+                if (in_array($sVarName, array('aDisabledModules'))) {
                     $mVarValue = array_values($mVarValue);
                     sort($mVarValue);
                 }
@@ -259,7 +259,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                 // (and thats the fact if there is more the one module in the string)
                 if ($sVarName == 'aModules') {
                     $aModules = $mVarValue;
-                    $aModulesTmp = [];
+                    $aModulesTmp = array();
                     foreach ($aModules as $sBaseClass => $sAmpSeparatedClassNames) {
                         if (strpos($sAmpSeparatedClassNames, '&') !== false) {
                             $aClassNames = explode("&", $sAmpSeparatedClassNames);
@@ -271,7 +271,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
                 // the following options can be sorted so they have a stable order between exports,
                 // that makes merging easier
-                if (in_array($sVarName, ['aModules'])) {
+                if (in_array($sVarName, array('aModules'))) {
                     ksort($mVarValue);
                 }
 

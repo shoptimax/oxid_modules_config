@@ -152,7 +152,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             $oConfig->saveShopConfVar(
                 'arr',
                 'aModules',
-                [],
+                array(),
                 $sShopId,
                 ""
             );
@@ -199,7 +199,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             $this->restoreModuleDefaults();
         }
 
-        $aModuleVersions = [];
+        $aModuleVersions = array();
         $aModuleVersions = $this->restoreGeneralShopSettings($aConfigValues);
         $this->importModuleConfig($aConfigValues['module']);
 
@@ -390,7 +390,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         foreach ($aGeneralSettings as $sVarName => $mTypedVarValue) {
             list($sType, $mVarValue) = $this->getTypeAndValue($sVarName, $mTypedVarValue);
             if ($sVarName == 'aModules') {
-                $aModulesTmp = [];
+                $aModulesTmp = array();
                 foreach ($mVarValue as $sBaseClass => $aClassNames) {
                     $sAmpSeparatedClassNames = join('&', $aClassNames);
                     $aModulesTmp[$sBaseClass] = $sAmpSeparatedClassNames;

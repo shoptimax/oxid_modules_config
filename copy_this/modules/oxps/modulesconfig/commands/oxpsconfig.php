@@ -1,13 +1,13 @@
 <?php
 
-return [
+return array(
     'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations',
     'type' => 'yaml',
     'executeModuleActivationEvents' => false,
     //config fields that should never ever go to the config export
     //because they are generated or sensible in any way
     //TODO: document them
-    'excludeFields' => [
+    'excludeFields' => array(
         'aServersData',
         'blEnableIntangibleProdAgreement',
         'blShowTSCODMessage',
@@ -18,9 +18,9 @@ return [
         'sOnlineLicenseCheckTime',
         'sOnlineLicenseNextCheckTime',
         'sParcelService',
-    ],
+    ),
     //environment specific fields
-    'envFields' => [
+    'envFields' => array(
         'oxps123TvMISEnvironment', //environment dependent
         'oxps123PaymentsTesting',
         'aSerials', //oxid serial number. Must be different on live system.
@@ -54,21 +54,21 @@ return [
         'o2c_sUsername',
         'o2c_sUserPassword',
         'o2c_sSoapServerAddress',
-    ],
-    'env' => [
-        //'develop' => [
+    ),
+    'env' => array(
+        //'develop' => array(
             //'dir' => dirname(__DIR__) . '/../../config/$env' is default
-        //],
+        //),
 
         /* map other environments to existing ones */
-        'develop' => [
+        'develop' => array(
             'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/development',
-        ],
-        'merge-request' => [
+        ),
+        'merge-request' => array(
             'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/integration',
-        ],
-        'testing' => [
+        ),
+        'testing' => array(
             'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/testing',
-        ]
-    ],
-];
+        )
+    ),
+);
