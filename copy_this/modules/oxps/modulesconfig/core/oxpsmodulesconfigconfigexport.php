@@ -62,6 +62,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
         } catch(RuntimeException $e){
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($e->getMessage());
+            $this->getDebugOutput()->writeLn($e->getTraceAsString());
         }
     }
 
