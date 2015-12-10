@@ -56,11 +56,12 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             $this->runShopConfigImportForAllShops($aShops);
             $this->getDebugOutput()->writeLn("done");
         } catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
-            $this->getDebugOutput()->writeLn("Could not complete.");
+            $this->getDebugOutput()->writeLn("Could not parse a YAML File.");
             $this->getDebugOutput()->writeLn($e->getMessage());
         } catch (Exception $e) {
             $this->getDebugOutput()->writeLn("Could not complete.");
             $this->getDebugOutput()->writeLn($e->getMessage());
+            $this->getDebugOutput()->writeLn($e->getTraceAsString());
         }
     }
 
