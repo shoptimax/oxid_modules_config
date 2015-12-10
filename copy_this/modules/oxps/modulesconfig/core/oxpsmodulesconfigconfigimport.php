@@ -236,9 +236,8 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         /**
          * @var oxModuleList $oxModuleList
          */
-        $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
+        $aModules = $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
 
-        $aModules = $oxModuleList->getList();
         foreach ($aModules as $sModuleId => $oModule) {
             // restore default module settings
             /** @var oxModule $oModule */
