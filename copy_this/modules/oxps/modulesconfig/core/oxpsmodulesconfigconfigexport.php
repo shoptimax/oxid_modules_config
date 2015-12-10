@@ -33,14 +33,18 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 {
 
     /*
-     * executes all functionality which is necessary for a call of OXID console config:import
+     * executes all functionality which is necessary for a call of OXID console config:export
      *
      */
     public function executeConsoleCommand()
     {
         $this->init();
+		
+		//all filed that should not be included in the common export file
+        $aGlobalExcludeFields = array_merge($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']);
 
-        $aReturn = $this->getConfigValues($this->aConfiguration['excludeFields'], false);
+		//get all common configuration values, but not the excluded ones and not the environmentspecific ones
+        $aReturn = $this->getConfigValues($aGlobalExcludeFields, false);
 
         $aReturn = $this->addModuleOrder($aReturn);
 
@@ -120,10 +124,10 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             unset ($aShop['OXID']);
             unset ($aShop['OXTIMESTAMP']);
             foreach ($aShop as $sVarName => $sVarValue) {
-                $blFieldConfigured = array_key_exists($sVarName, $aConfigFields);
-                $blIncludeFiled = $blInclude_mode && $blFieldConfigured;
-                $blIncludeFiled = $blIncludeFiled || (!$blInclude_mode && !$blFieldConfigured);
-                if ($blIncludeFiled) {
+                $blFieldConfigured = in_array($sVarName, $aConfigFields);
+                $blIncludeField = $blInclude_mode && $blFieldConfigured;
+                $blIncludeField = $blIncludeField || (!$blInclude_mode && !$blFieldConfigured);
+                if ($blIncludeField) {
                     $aGroupedValues[$id]['oxshops'][$sVarName] = $sVarValue;
                 }
             }
