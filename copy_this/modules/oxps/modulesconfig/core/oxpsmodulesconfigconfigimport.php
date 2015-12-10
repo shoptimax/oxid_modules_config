@@ -196,8 +196,19 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
 
         $this->importThemeConfig($aConfigValues['theme'], $sShopId);
 
-        /** @var oxModule $oModule */
-        $oModule = oxNew('oxStateFixerModule');
+        if (class_exists('oxModuleStateFixer')) {
+            //since 5.2 we have the oxModuleStateFixer in the oxid console
+            /** @var oxModuleStateFixer $oModuleStateFixer */
+            $oModuleStateFixer = oxRegistry::get('oxModuleStateFixer');
+            $oModuleStateFixer->setConfig($oConfig);
+            /** @var oxModule $oModule */
+            $oModule = oxNew('oxModule');
+        } else {
+            //pre oxid 5.2 we have the oxStateFixerModule in the oxid console
+            /** @var oxModule $oModule */
+            $oModule = oxNew('oxStateFixerModule');
+        }
+
         foreach ($aModuleVersions as $sModuleId => $sVersion) {
             if (!$oModule->load($sModuleId)) {
                 $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping");
@@ -205,11 +216,19 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             }
 
             //fix state again because class chain was reseted by the import above
-            $oModule->fix();
+            if($oModuleStateFixer != null) {
+                $oModuleStateFixer->fix($oModule);
+            }else {
+                $oModule->fix();
+            }
 
             //execute activate event
             if ($this->aConfiguration['executeModuleActivationEvents'] && $oModule->isActive()) {
-                $oModule->activate();
+                if($oModuleStateFixer != null) {
+                    $oModuleStateFixer->activate($oModule);
+                }else {
+                    $oModule->activate();
+                }
             }
             $sCurrentVersion = $oModule->getInfo("version");
             if ($sCurrentVersion != $sVersion) {
