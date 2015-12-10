@@ -23,7 +23,8 @@ return array(
     'envFields' => array(
         'oxps123TvMISEnvironment', //environment dependent
         'oxps123PaymentsTesting',
-        'aSerials', //oxid serial number. Must be different on live system.
+        'aSerials', //oxid serial numbers. Must be different on live system.
+        'OXSERIAL', // generated single serial number from all aSerials
         'sMallShopURL',
         'sMallSSLShopURL',
         'blCheckTemplates', //sets if templates should be recompililed on change good in develop env
