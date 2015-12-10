@@ -71,6 +71,9 @@ abstract class OxpsConfigCommandBase
         }
         $this->initConfiguration();
         $this->setDebugOutput();
+ 		if(count(array_intersect($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']))>0) {
+            $this->getDebugOutput()->writeLn("CAUTION: excludeFields and envFields are not disjoint! " . var_dump($aConfigIntersect));
+        }
     }
 
     /**
@@ -133,9 +136,6 @@ abstract class OxpsConfigCommandBase
 
         $aAllEnvConfigs = $this->aConfiguration['env'];
         $aEnvFields     = $this->aConfiguration['envFields'];
-        foreach ($aEnvFields as $sExcludeField) {
-            $this->aConfiguration['excludeFields'][] = $sExcludeField;
-        }
         $sFilename            = $sCommandsDir . DIRECTORY_SEPARATOR . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
         $this->aDefaultConfig = $this->readConfigValues($sFilename, 'yaml');
         $aEnvConfig           = $aAllEnvConfigs[$this->sEnv];
