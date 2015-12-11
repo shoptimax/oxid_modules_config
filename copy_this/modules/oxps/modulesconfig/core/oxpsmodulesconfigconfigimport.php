@@ -121,9 +121,12 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                             $mOverriderValue = array_merge($aBaseValue, $mOverriderValue);
                         }
                     } else {
-                        $this->oOutput->writeLn("Corrupted config value $key for shop " . $this->sShopId);
+                        $this->oOutput->writeLn("ERROR: Ignoring corrupted common config value '$key':'$aBaseValue' for shop " . $this->sShopId);
                     }
                 }
+            }else{
+                $this->oOutput->writeLn("ERROR: Skipping corrupted config value '$key':'$mOverriderValue' for shop " . $this->sShopId);
+                continue;
             }
             $aBase[$key] = $mOverriderValue;
         }
@@ -340,11 +343,11 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
      */
     protected function importModuleConfig($aModules)
     {
-        /** @var oxModule $oModule */
-        $oModule = oxNew('oxModule');
         if ($aModules == null) {
             return;
         }
+        /** @var oxModule $oModule */
+        $oModule = oxNew('oxModule');
         foreach ($aModules as $sModuleId => $aModuleSettings) {
             if (!$oModule->load($sModuleId)) {
                 $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping");

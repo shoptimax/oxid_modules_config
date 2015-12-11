@@ -138,13 +138,12 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     function withoutDefaults(&$aGroupedValues)
     {
         foreach ($aGroupedValues as $sShopId => &$aShopConfig) {
+            if (isset($aShopConfig['module'])) {
+                $aModuleConfigs = &$aShopConfig['module'];
 
-            $aModuleConfigs = &$aShopConfig['module'];
+                /** @var oxModule $oModule */
+                $oModule = oxNew('oxModule');
 
-            /** @var oxModule $oModule */
-            $oModule = oxNew('oxModule');
-
-            if (isset($aModuleConfigs)) {
                 foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
 
                     if (!$oModule->load($sModuleId)) {
@@ -225,7 +224,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
             if (in_array($sVarName, array('aDisabledModules'))) {
                 if ($sVarType !== 'arr') {
-                    $this->oOutput->writeLn("[error] $sVarName corrupted vartype: '$sVarType' converted to arr");
+                    $this->oOutput->writeLn("[error] $sVarName corrupted vartype: '$sVarType' converted to arr (shop: $sShopId)");
                     $sVarType = 'arr';
                 }
             }
@@ -233,7 +232,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             if (in_array($sVarType, array('aarr', 'arr'))) {
                 $mVarValue = unserialize($mVarValue);
                 if (!is_array($mVarValue)) {
-                    $this->oOutput->writeLn("[error] $sVarName is not array: '$mVarValue' convert to empty array");
+                    $this->oOutput->writeLn("[error] $sVarName is not array: '$mVarValue' convert to empty array (shop: $sShopId)");
                     $mVarValue = array();
                 }
             }
