@@ -211,6 +211,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             /** @var oxModule $oModule */
             $oModule = oxNew('oxStateFixerModule');
         }
+        $oModule->setConfig($oConfig);
 
         foreach ($aModuleVersions as $sModuleId => $sVersion) {
             if (!$oModule->load($sModuleId)) {
@@ -222,7 +223,13 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             if($oModuleStateFixer != null) {
                 $oModuleStateFixer->fix($oModule);
             }else {
-                $oModule->fix();
+                $oModule->fixVersion();
+                $oModule->fixExtendGently();
+                $oModule->fixFiles();
+                $oModule->fixTemplates();
+                $oModule->fixBlocks();
+                $oModule->fixSettings();
+                $oModule->fixEvents();
             }
 
             //execute activate event
