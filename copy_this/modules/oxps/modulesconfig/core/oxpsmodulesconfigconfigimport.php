@@ -215,7 +215,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
 
         foreach ($aModuleVersions as $sModuleId => $sVersion) {
             if (!$oModule->load($sModuleId)) {
-                $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping");
+                $this->oOutput->writeLn("[ERROR] can not load {$sModuleId} given in importfile  shop{$sShopId}.yaml in aModuleVersions");
                 continue;
             }
 
@@ -260,13 +260,15 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
     protected function restoreModuleDefaults()
     {
         $sShopId = $this->sShopId;
-        $oConfig = oxSpecificShopConfig::get($sShopId);
+        $oConfig = $this->oConfig;
         $oxModuleList = oxNew('oxModuleList');
+        $oxModuleList->setConfig($oConfig);
 
         /**
          * @var oxModuleList $oxModuleList
+         * //it is important to call this method to load new module into the shop
          */
-        $aModules = $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
+        $aModules = $oxModuleList->getModulesFromDir($oConfig->getModulesDir());
 
         foreach ($aModules as $sModuleId => $oModule) {
             // restore default module settings
@@ -355,9 +357,10 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         }
         /** @var oxModule $oModule */
         $oModule = oxNew('oxModule');
+        $oModule->setConfig($this->oConfig);
         foreach ($aModules as $sModuleId => $aModuleSettings) {
             if (!$oModule->load($sModuleId)) {
-                $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping");
+                $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping importModuleConfig");
 
                 continue;
             }
