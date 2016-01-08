@@ -40,7 +40,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     {
         $this->init();
 		
-		//all filed that should not be included in the common export file
+		//all fields that should not be included in the common export file
         $aGlobalExcludeFields = array_merge($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']);
 
 		//get all common configuration values, but not the excluded ones and not the environmentspecific ones
@@ -134,6 +134,23 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
         }
     }
 
+    protected function handleModuleOnError($sModuleId)
+    {
+        $oDebugOutput = $this->getDebugOutput();
+        $sSql = "DELETE FROM oxconfig WHERE oxmodule = 'module:{$sModuleId}'";
+        $blForceClean = $this->oInput->getOption('force-cleanup');
+        //TODO add option force-repaire and repair module path to be sure module realy not exists
+        if ($blForceClean) {
+            //TODO $blForceClean should also call force-repaire and repair module path to be sure module realy not exists
+            //TODO mark already cleaned modules
+            $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql");
+            oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->execute($sSql);
+        } else {
+            $oDebugOutput->writeLn("[ERROR] {$sModuleId} does not exist. use --force-cleanup or run $sSql ");
+            $oDebugOutput->writeLn("[ERROR] config for {$sModuleId} will not be included in export");
+        }
+    }
+
     protected
     function withoutDefaults(&$aGroupedValues)
     {
@@ -146,9 +163,9 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
                 foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
 
-                    if (!$oModule->load($sModuleId)) {
-                        $oDebugOutput = $this->getDebugOutput();
-                        $oDebugOutput->writeLn("[DEBUG] {$sModuleId} does not exist - skipping");
+                    if (! $oModule->load($sModuleId)) {
+                        $this->handleModuleOnError($sModuleId);
+                        unset ($aModuleConfigs[$sModuleId]);
                         continue;
                     }
                     $aDefaultModuleSettings = $oModule->getInfo("settings");
@@ -238,11 +255,6 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             }
 
             if (!$sModule) {
-                if ($sVarName === 'aModuleVersions') {
-                    //aModuleVersions is needed to compare the version on config import so you can be warned
-                    //if the import does not match the code version and may be wrong or have wrong assumptions
-                    // about module defaults
-                }
 
                 //restored from module metadata by import:
                 if (in_array(
@@ -284,6 +296,21 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                     $mVarValue,
                     $sVarType
                 );
+
+                if ($sVarName === 'aModuleVersions') {
+                    //aModuleVersions is needed to compare the version on config import so you can be warned
+                    //if the import does not match the code version and may be wrong or have wrong assumptions
+                    // about module defaults
+                    $oModule = oxNew('oxModule');
+                    foreach($mVarValue as $sModuleId => $sVersion){
+                        if (!$oModule->load($sModuleId)) {
+                            $this->handleModuleOnError($sModuleId);
+                            unset($mVarValue[$sModuleId]);
+                        }
+                    }
+
+                }
+
                 $sSection = $this->sNameForGeneralShopSettings;
                 $aGroupedValues[$sShopId][$sSection][$sVarName] =
                     $mVarValue;
