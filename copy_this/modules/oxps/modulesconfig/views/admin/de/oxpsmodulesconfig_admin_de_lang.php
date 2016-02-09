@@ -57,13 +57,14 @@ $aLang = array(
                                                 'Ein automatisches Backup wird vor dem Import angelegt.',
 
     // Module settings translations
-    'OXPS_MODULESCONFIG_SETTING_VERSION'     => 'Versionen',
-    'OXPS_MODULESCONFIG_SETTING_EXTEND'      => 'Erweiterte Klassen',
-    'OXPS_MODULESCONFIG_SETTING_FILES'       => 'Moduldateien',
-    'OXPS_MODULESCONFIG_SETTING_TEMPLATES'   => 'Templates',
-    'OXPS_MODULESCONFIG_SETTING_BLOCKS'      => 'Blöcke',
-    'OXPS_MODULESCONFIG_SETTING_SETTINGS'    => 'Einstellungen',
-    'OXPS_MODULESCONFIG_SETTING_EVENTS'      => 'Events',
+    'OXPS_MODULESCONFIG_SETTING_VERSION'     				          => 'Versionen',
+    'OXPS_MODULESCONFIG_SETTING_EXTEND'      						  => 'Erweiterte Klassen',
+    'OXPS_MODULESCONFIG_SETTING_FILES'       						  => 'Moduldateien',
+    'OXPS_MODULESCONFIG_SETTING_TEMPLATES'   						  => 'Templates',
+    'OXPS_MODULESCONFIG_SETTING_BLOCKS'      			 			  => 'Blöcke',
+    'OXPS_MODULESCONFIG_SETTING_SETTINGS'    			 			  => 'Einstellungen',
+    'OXPS_MODULESCONFIG_SETTING_EVENTS'      			  			  => 'Events',
+	'SHOP_MODULE_OXPS_MODULESCONFIG_SETTING_CONFIGURATION_DIRECTORY'  => 'Pfad zum Konfigurationsverzeichnis relativ zum Verzeichnis "modules/oxps/modulesconfig"',		
 
     // Errors
     'OXPS_MODULESCONFIG_ERR_NO_MODULES'      => 'Bitte wählen Sie mindestens ein Modul.',

@@ -64,4 +64,7 @@ $aModule = array(
         'onActivate'   => 'oxpsModulesConfigModule::onActivate',
         'onDeactivate' => 'oxpsModulesConfigModule::onDeactivate',
     ),
+    'settings' => array(
+        array( 'group' => 'main', 'name' => 'OXPS_MODULESCONFIG_SETTING_CONFIGURATION_DIRECTORY', 'type' => 'str', 'value' => 'configurations' )
+    )
 );

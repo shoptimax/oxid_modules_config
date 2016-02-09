@@ -69,10 +69,10 @@ abstract class OxpsConfigCommandBase
         } else {
             $this->sEnv = 'development';
         }
-        $this->initConfiguration();
         $this->setDebugOutput();
+        $this->initConfiguration();
  		if(count(array_intersect($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']))>0) {
-            $this->getDebugOutput()->writeLn("CAUTION: excludeFields and envFields are not disjoint! " . var_dump($aConfigIntersect));
+            $this->getDebugOutput()->writeLn("CAUTION: excludeFields and envFields are not disjoint! ");
         }
     }
 
@@ -125,21 +125,76 @@ abstract class OxpsConfigCommandBase
      * It is been done only once. It will be stored as object property
      * after first call and will return it.
      *
+     * @throws oxFileException
+     *
      */
     protected function initConfiguration()
     {
-        $sCommandsDir = dirname(__DIR__) .
-            DIRECTORY_SEPARATOR . 'commands';
+        $sConfigurationsDir = $this->_getConfigurationDirectoryPath();
         if ($this->aConfiguration === null) {
-            $this->aConfiguration = require $sCommandsDir . DIRECTORY_SEPARATOR . 'oxpsconfig.php';
+            $this->aConfiguration = $this->_getModuleSettings();
         }
 
         $aAllEnvConfigs = $this->aConfiguration['env'];
-        $aEnvFields     = $this->aConfiguration['envFields'];
-        $sFilename            = $sCommandsDir . DIRECTORY_SEPARATOR . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
+        $sFilename            = $sConfigurationsDir . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
         $this->aDefaultConfig = $this->readConfigValues($sFilename, 'yaml');
         $aEnvConfig           = $aAllEnvConfigs[$this->sEnv];
         $this->aEnvConfig     = $aEnvConfig;
+    }
+
+    /*
+     * @todo: is it necessary to activate the module to make the path settings?
+     * @return array
+     */
+    protected function _getModuleSettings()
+    {
+        $aModulesettings = array();
+        $sPathToModuleSettingsFile = $this->_getModuleSettingsFilePath();
+        if(file_exists($sPathToModuleSettingsFile)){
+            $aModulesettings = require $sPathToModuleSettingsFile;
+        }
+        return $aModulesettings;
+    }
+
+    /*
+     * @return string
+     *
+     * @throws oxFileException
+     */
+    protected function _getModuleSettingsFilePath()
+    {
+        $sConfigurationDirectoryPath = $this->_getConfigurationDirectoryPath();
+        $sModuleSettingsFilePath = $sConfigurationDirectoryPath . 'oxpsconfigmodulesettings.php';
+        if(!is_file($sModuleSettingsFilePath) || !is_readable($sModuleSettingsFilePath)){
+            /** @var oxFileException $oEx */
+            $oEx = oxNew('oxFileException');
+            $oEx->setMessage("Requested file does not exist: " . $sModuleSettingsFilePath);
+            throw $oEx;
+        }
+        return $sModuleSettingsFilePath;
+    }
+
+    /*
+     * @return string
+     *
+     * @throws oxFileException
+     */
+    protected function _getConfigurationDirectoryPath()
+    {
+        $oConfig = oxRegistry::getConfig();
+        $sPathToThisModule = $oConfig->getModulesDir() . 'oxps' . DIRECTORY_SEPARATOR . 'modulesconfig' . DIRECTORY_SEPARATOR;
+        $sRelativeConfigurationDirectoryPath = $oConfig->getConfigParam('OXPS_MODULESCONFIG_SETTING_CONFIGURATION_DIRECTORY');
+        if(is_string($sRelativeConfigurationDirectoryPath)){
+            $sRelativeConfigurationDirectoryPath = trim($sRelativeConfigurationDirectoryPath, '/');
+        }
+        $sPathToModuleSettingsFile = $sPathToThisModule . $sRelativeConfigurationDirectoryPath . DIRECTORY_SEPARATOR;
+        if(!is_dir($sPathToModuleSettingsFile)){
+            /** @var oxFileException $oEx */
+            $oEx = oxNew("oxFileException");
+            $oEx->setMessage("Requested directory does not exist: " . $sPathToModuleSettingsFile);
+            throw $oEx;
+        }
+        return $sPathToModuleSettingsFile;
     }
 
     /**

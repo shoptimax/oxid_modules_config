@@ -38,17 +38,17 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
      */
     public function executeConsoleCommand()
     {
-        $this->init();
-		
-		//all fields that should not be included in the common export file
-        $aGlobalExcludeFields = array_merge($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']);
-
-		//get all common configuration values, but not the excluded ones and not the environmentspecific ones
-        $aReturn = $this->getConfigValues($aGlobalExcludeFields, false);
-
-        $aReturn = $this->addModuleOrder($aReturn);
-
         try{
+            $this->init();
+
+            //all fields that should not be included in the common export file
+            $aGlobalExcludeFields = array_merge($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']);
+
+            //get all common configuration values, but not the excluded ones and not the environmentspecific ones
+            $aReturn = $this->getConfigValues($aGlobalExcludeFields, false);
+
+            $aReturn = $this->addModuleOrder($aReturn);
+
             $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
 
             // get environment specific config values
@@ -67,6 +67,9 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($e->getMessage());
             $this->getDebugOutput()->writeLn($e->getTraceAsString());
+        } catch(oxFileException $oEx){
+            $this->getDebugOutput()->writeLn("Could not complete");
+            $this->getDebugOutput()->writeLn($oEx->getMessage());
         }
     }
 
@@ -241,7 +244,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
             if (in_array($sVarName, array('aDisabledModules'))) {
                 if ($sVarType !== 'arr') {
-                    $this->oOutput->writeLn("[error] $sVarName corrupted vartype: '$sVarType' converted to arr (shop: $sShopId)");
+                    $this->oOutput->writeLn("[warning] $sVarName corrupted vartype: '$sVarType' converted to arr (shop: $sShopId)");
                     $sVarType = 'arr';
                 }
             }
@@ -249,7 +252,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             if (in_array($sVarType, array('aarr', 'arr'))) {
                 $mVarValue = unserialize($mVarValue);
                 if (!is_array($mVarValue)) {
-                    $this->oOutput->writeLn("[error] $sVarName is not array: '$mVarValue' convert to empty array (shop: $sShopId)");
+                    $this->oOutput->writeLn("[warning] $sVarName is not array: '$mVarValue' convert to empty array (shop: $sShopId)");
                     $mVarValue = array();
                 }
             }

@@ -62,7 +62,7 @@ return array(
         //),
 
         /* map other environments to existing ones */
-        'develop' => array(
+        'development' => array(
             'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/development',
         ),
         'merge-request' => array(
