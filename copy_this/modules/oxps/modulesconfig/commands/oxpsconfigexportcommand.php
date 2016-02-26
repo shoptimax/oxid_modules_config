@@ -43,8 +43,8 @@ class OxpsConfigExportCommand extends oxConsoleCommand
         $oOutput->writeLn();
         $oOutput->writeLn('Available options:');
         $oOutput->writeLn('  -n, --no-debug     No debug output');
-        $oOutput->writeLn('  -e, --env          Environment');
-        $oOutput->writeLn('  -s, --shop         Shop');
+        $oOutput->writeLn('  --env=ENVIRONMENT  Environment');
+        //TODO: $oOutput->writeLn('  --shop=SHOPID      Shop');
     }
 
     /**

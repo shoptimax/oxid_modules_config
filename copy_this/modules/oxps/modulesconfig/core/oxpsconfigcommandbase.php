@@ -16,7 +16,7 @@ abstract class OxpsConfigCommandBase
     protected $oOutput;
 
     /*
-     * @var oxiInput $oInput The input stream with arguments
+     * @var oxIConsoleInput $oInput The input stream with arguments
      */
     protected $oInput;
 
@@ -64,15 +64,16 @@ abstract class OxpsConfigCommandBase
      */
     protected function init()
     {
-        if ($this->oInput->hasOption(array('e', 'env'))) {
-            $this->sEnv = $this->oInput->getOption(array('e', 'env'));
+        if ($this->oInput->hasOption('env')) {
+            $this->sEnv = $this->oInput->getOption('env');
         } else {
             $this->sEnv = 'development';
         }
         $this->setDebugOutput();
         $this->initConfiguration();
- 		if(count(array_intersect($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']))>0) {
-            $this->getDebugOutput()->writeLn("CAUTION: excludeFields and envFields are not disjoint! ");
+        $aConfigIntersect = array_intersect($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']);
+        if(count($aConfigIntersect)>0) {
+            $this->getDebugOutput()->writeLn("CAUTION: excludeFields and envFields are not disjoint! " . var_dump($aConfigIntersect));
         }
     }
 
