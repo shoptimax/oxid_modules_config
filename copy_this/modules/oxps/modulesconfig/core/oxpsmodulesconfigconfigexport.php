@@ -38,11 +38,13 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
      */
     public function executeConsoleCommand()
     {
-        try{
+        try {
             $this->init();
 
             //all fields that should not be included in the common export file
-            $aGlobalExcludeFields = array_merge($this->aConfiguration['excludeFields'],$this->aConfiguration['envFields']);
+            $aGlobalExcludeFields = array_merge(
+                $this->aConfiguration['excludeFields'], $this->aConfiguration['envFields']
+            );
 
             //get all common configuration values, but not the excluded ones and not the environmentspecific ones
             $aReturn = $this->getConfigValues($aGlobalExcludeFields, false);
@@ -57,17 +59,17 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             // write environment specific config values to files
             $this->writeDataToFileSeperatedByShop($this->getEnviromentConfigDir(), $aReturn);
 
-            $aMetaConfigFile['shops']                 = $aShops;
+            $aMetaConfigFile['shops'] = $aShops;
             $aMetaConfigFile[$this->sNameForMetaData] = $this->aDefaultConfig[$this->sNameForMetaData];
 
             $this->writeDataToFile($this->getShopsConfigFileName(), $aMetaConfigFile);
 
             $this->getDebugOutput()->writeLn("done");
-        } catch(RuntimeException $e){
+        } catch (RuntimeException $e) {
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($e->getMessage());
             $this->getDebugOutput()->writeLn($e->getTraceAsString());
-        } catch(oxFileException $oEx){
+        } catch (oxFileException $oEx) {
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($oEx->getMessage());
         }
@@ -166,7 +168,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
                 foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
 
-                    if (! $oModule->load($sModuleId)) {
+                    if (!$oModule->load($sModuleId)) {
                         $this->handleModuleOnError($sModuleId);
                         unset ($aModuleConfigs[$sModuleId]);
                         continue;
@@ -244,7 +246,9 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
             if (in_array($sVarName, array('aDisabledModules'))) {
                 if ($sVarType !== 'arr') {
-                    $this->oOutput->writeLn("[warning] $sVarName corrupted vartype: '$sVarType' converted to arr (shop: $sShopId)");
+                    $this->oOutput->writeLn(
+                        "[warning] $sVarName corrupted vartype: '$sVarType' converted to arr (shop: $sShopId)"
+                    );
                     $sVarType = 'arr';
                 }
             }
@@ -252,7 +256,9 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             if (in_array($sVarType, array('aarr', 'arr'))) {
                 $mVarValue = unserialize($mVarValue);
                 if (!is_array($mVarValue)) {
-                    $this->oOutput->writeLn("[warning] $sVarName is not array: '$mVarValue' convert to empty array (shop: $sShopId)");
+                    $this->oOutput->writeLn(
+                        "[warning] $sVarName is not array: '$mVarValue' convert to empty array (shop: $sShopId)"
+                    );
                     $mVarValue = array();
                 }
             }
@@ -305,7 +311,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                     //if the import does not match the code version and may be wrong or have wrong assumptions
                     // about module defaults
                     $oModule = oxNew('oxModule');
-                    foreach($mVarValue as $sModuleId => $sVersion){
+                    foreach ($mVarValue as $sModuleId => $sVersion) {
                         if (!$oModule->load($sModuleId)) {
                             $this->handleModuleOnError($sModuleId);
                             unset($mVarValue[$sModuleId]);

@@ -47,18 +47,23 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
      */
     public function executeConsoleCommand()
     {
-        $this->init();
-        // import environment specific config values
-
-        $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
-        $aShops = $aMetaConfig['shops'];
         try {
+            $this->init();
+            // import environment specific config values
+
+            $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
+            $aShops = $aMetaConfig['shops'];
             $this->runShopConfigImportForAllShops($aShops);
             $this->getDebugOutput()->writeLn("done");
         } catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
             $this->getDebugOutput()->writeLn("Could not parse a YAML File.");
             $this->getDebugOutput()->writeLn($e->getMessage());
-        } catch (Exception $e) {
+        } catch (oxFileException $oEx) {
+            $this->getDebugOutput()->writeLn("Could not complete");
+            $this->getDebugOutput()->writeLn($oEx->getMessage());
+
+            return;
+        } catch (RuntimeException $e) {
             $this->getDebugOutput()->writeLn("Could not complete.");
             $this->getDebugOutput()->writeLn($e->getMessage());
             $this->getDebugOutput()->writeLn($e->getTraceAsString());
@@ -90,7 +95,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
 
         $this->oOutput->writeLn("Importing config for shop $sShop");
 
-        $this->importConfigValues($aResult, true);
+        $this->importConfigValues($aResult);
     }
 
     /**
@@ -121,11 +126,15 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                             $mOverriderValue = array_merge($aBaseValue, $mOverriderValue);
                         }
                     } else {
-                        $this->oOutput->writeLn("ERROR: Ignoring corrupted common config value '$key':'$aBaseValue' for shop " . $this->sShopId);
+                        $this->oOutput->writeLn(
+                            "ERROR: Ignoring corrupted common config value '$key':'$aBaseValue' for shop " . $this->sShopId
+                        );
                     }
                 }
-            }else{
-                $this->oOutput->writeLn("ERROR: Skipping corrupted config value '$key':'$mOverriderValue' for shop " . $this->sShopId);
+            } else {
+                $this->oOutput->writeLn(
+                    "ERROR: Skipping corrupted config value '$key':'$mOverriderValue' for shop " . $this->sShopId
+                );
                 continue;
             }
             $aBase[$key] = $mOverriderValue;
@@ -181,21 +190,16 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
      * @param array $aConfigValues
      * @param bool $blRestoreModuleDefaults
      */
-    protected function importConfigValues($aConfigValues, $blRestoreModuleDefaults = false)
+    protected function importConfigValues($aConfigValues)
     {
         $sShopId = $this->sShopId;
-        $this->importShopsConfig($aConfigValues, $blRestoreModuleDefaults);
+        $this->importShopsConfig($aConfigValues);
 
         $oConfig = oxSpecificShopConfig::get($sShopId);
         $this->oConfig = $oConfig;
 
-        if ($blRestoreModuleDefaults) {
-            $this->restoreModuleDefaults();
-        }
-
-        $aModuleVersions = array();
+        $this->importModuleConfig($aConfigValues);
         $aModuleVersions = $this->restoreGeneralShopSettings($aConfigValues);
-        $this->importModuleConfig($aConfigValues['module']);
 
         $this->importThemeConfig($aConfigValues['theme'], $sShopId);
 
@@ -215,14 +219,19 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
 
         foreach ($aModuleVersions as $sModuleId => $sVersion) {
             if (!$oModule->load($sModuleId)) {
-                $this->oOutput->writeLn("[ERROR] can not load {$sModuleId} given in importfile  shop{$sShopId}.yaml in aModuleVersions");
+                $this->oOutput->writeLn(
+                    "[ERROR] can not load {$sModuleId} given in importfile  shop{$sShopId}.yaml in aModuleVersions"
+                );
                 continue;
             }
 
             //fix state again because class chain was reseted by the import above
-            if($oModuleStateFixer != null) {
+            if ($oModuleStateFixer != null) {
+                if (method_exists($oModuleStateFixer, 'setDebugOutput')) {
+                    $oModuleStateFixer->setDebugOutput($this->getDebugOutput());
+                }
                 $oModuleStateFixer->fix($oModule);
-            }else {
+            } else {
                 $oModule->fixVersion();
                 $oModule->fixExtendGently();
                 $oModule->fixFiles();
@@ -234,9 +243,9 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
 
             //execute activate event
             if ($this->aConfiguration['executeModuleActivationEvents'] && $oModule->isActive()) {
-                if($oModuleStateFixer != null) {
+                if ($oModuleStateFixer != null) {
                     $oModuleStateFixer->activate($oModule);
-                }else {
+                } else {
                     $oModule->activate();
                 }
             }
@@ -252,14 +261,19 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         }
     }
 
-    /*
-     * Restore module defaults even if the module is not installed.
-     * This will scan the module directory and add all modules (module paths). This is something fixstates does not do.
+    /**
+     * Restore module defaults and import modul config
+     * This will scan the module directory and add all modules (module paths).
      * This must be done before aDisabledModules is restored because this function deactivates modules.
+     *
+     * @param oxModule $aModules
+     *
+     * @return null
      */
-    protected function restoreModuleDefaults()
+    protected function importModuleConfig(&$aConfigValues)
     {
-        $sShopId = $this->sShopId;
+        $aModulesOverrides = $aConfigValues['module'];
+
         $oConfig = $this->oConfig;
         $oxModuleList = oxNew('oxModuleList');
         $oxModuleList->setConfig($oConfig);
@@ -270,29 +284,37 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
          */
         $aModules = $oxModuleList->getModulesFromDir($oConfig->getModulesDir());
 
+        $aGeneralSettings = &$aConfigValues[$this->sNameForGeneralShopSettings];
+        $aModuleExtensions = &$aGeneralSettings['aModules'];
         foreach ($aModules as $sModuleId => $oModule) {
+            if ($oModule->hasExtendClass()) {
+                $aAddModules = $oModule->getExtensions();
+                foreach ($aAddModules as $key => $ext) {
+                    if(!isset($aModuleExtensions[$key])) {
+                        $aModuleExtensions[$key][] = $ext;
+                    }
+                }
+            }
+
             // restore default module settings
             /** @var oxModule $oModule */
             $aDefaultModuleSettings = $oModule->getInfo("settings");
             if ($aDefaultModuleSettings) {
+                $aModuleOverride = $aModulesOverrides[$sModuleId];
                 foreach ($aDefaultModuleSettings as $aValue) {
                     $sVarName = $aValue["name"];
                     // We do not want to override with default values of fields which
-                    // are environment independent or excluded from configuration export
+                    // excluded from configuration export
                     // as this will override those values with every config import.
-                    if (in_array($sVarName, $this->aConfiguration['envFields'])
-                        || in_array($sVarName, $this->aConfiguration['excludeFields'])) {
-                            continue;
-                        }
+                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+                        continue;
+                    }
                     $mVarValue = $aValue["value"];
+                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
+                        $mVarValue = $aModuleOverride[$sVarName];
+                    }
 
-                    $oConfig->saveShopConfVar(
-                        $aValue["type"],
-                        $sVarName,
-                        $mVarValue,
-                        $sShopId,
-                        "module:$sModuleId"
-                    );
+                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
                 }
             }
         }
@@ -323,20 +345,36 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         return array($sVarType, $mVarValue);
     }
 
-    protected function saveShopVar($sVarName, $mVarValue, $sSectionModule)
+    protected function saveShopVar($sVarName, $mVarValue, $sSectionModule, $sVarType = null)
     {
         $sShopId = $this->sShopId;
         $oConfig = $this->oConfig;
 
-        list($sVarType, $mVarValue) = $this->getTypeAndValue($sVarName, $mVarValue);
+        $value = $oConfig->getShopConfVar($sVarName, $sShopId);
 
-        $oConfig->saveShopConfVar(
-            $sVarType,
-            $sVarName,
-            $mVarValue,
-            $sShopId,
-            $sSectionModule
-        );
+        if ($sVarType === null) {
+            list($sVarType, $mVarValue) = $this->getTypeAndValue($sVarName, $mVarValue);
+            if ($sVarType == 'bool') {
+                //internal representation of bool is 1 or ''
+                $value = $value ? '1' : '';
+            }
+        } else {
+            if ($sVarType == 'bool') {
+                //cleanup for some modules that have all kinds of bool representations in metadata.php
+                //so we can compare that value
+                $mVarValue = (($mVarValue == 'true' || $mVarValue) && $mVarValue && strcasecmp($mVarValue, "false"));
+            }
+        }
+
+        if ($mVarValue !== $value) {
+            $oConfig->saveShopConfVar(
+                $sVarType,
+                $sVarName,
+                $mVarValue,
+                $sShopId,
+                $sSectionModule
+            );
+        }
     }
 
     protected function is_assoc_array($arr)
@@ -344,32 +382,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         return is_array($arr) && (array_keys($arr) !== range(0, count($arr) - 1));
     }
 
-    /**
-     * @param array $aSectionData
-     * @param oxModule $oModule
-     *
-     * @return array
-     */
-    protected function importModuleConfig($aModules)
-    {
-        if ($aModules == null) {
-            return;
-        }
-        /** @var oxModule $oModule */
-        $oModule = oxNew('oxModule');
-        $oModule->setConfig($this->oConfig);
-        foreach ($aModules as $sModuleId => $aModuleSettings) {
-            if (!$oModule->load($sModuleId)) {
-                $this->oOutput->writeLn("[ERROR] {$sModuleId} does not exist - skipping importModuleConfig");
 
-                continue;
-            }
-            // set module config values that are explicitly included in this import
-            foreach ($aModuleSettings as $sVarName => $mVarValue) {
-                $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId");
-            }
-        }
-    }
 
     /**
      * @param $aSectionData
