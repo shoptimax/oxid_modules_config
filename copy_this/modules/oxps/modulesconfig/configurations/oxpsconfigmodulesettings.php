@@ -21,8 +21,6 @@ return array(
     ),
     //environment specific fields
     'envFields' => array(
-        'oxps123TvMISEnvironment', //environment dependent
-        'oxps123PaymentsTesting',
         'aSerials', //oxid serial numbers. Must be different on live system.
         'OXSERIAL', // generated single serial number from all aSerials
         'sMallShopURL',
