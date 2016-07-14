@@ -299,24 +299,61 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             // restore default module settings
             /** @var oxModule $oModule */
             $aDefaultModuleSettings = $oModule->getInfo("settings");
-            if ($aDefaultModuleSettings) {
-                $aModuleOverride = $aModulesOverrides[$sModuleId];
-                foreach ($aDefaultModuleSettings as $aValue) {
-                    $sVarName = $aValue["name"];
-                    // We do not want to override with default values of fields which
-                    // excluded from configuration export
-                    // as this will override those values with every config import.
-                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
-                        continue;
-                    }
-                    $mVarValue = $aValue["value"];
-                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
-                        $mVarValue = $aModuleOverride[$sVarName];
-                    }
 
-                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
-                }
+            // Ensure both arrays are array/not null
+            $aTmp = is_null($aDefaultModuleSettings) ? array() : $aDefaultModuleSettings;
+            $aDefaultModuleSettings = array();
+            foreach ($aTmp as $aSetting) {
+                $aDefaultModuleSettings[$aSetting['name']] = $aSetting;
             }
+            // array ($key => $value)
+            $aModuleOverrides = is_null($aModulesOverrides[$sModuleId]) ? array() : $aModulesOverrides[$sModuleId];
+
+            // merge from aModulesOverwrite into aDefaultModuleSettings
+            $aMergedModuleSettings = array();
+            foreach ($aDefaultModuleSettings as $sName => $aDefaultModuleSetting) {
+                if (array_key_exists($sName, $aModuleOverrides)) {
+                    $aDefaultModuleSetting['value'] = $aModuleOverrides[$sName];
+                    unset($aModuleOverrides[$sName]);
+                }
+                $aMergedModuleSettings[$sName] = $aDefaultModuleSetting;
+            }
+
+            foreach ($aModuleOverrides as $sName => $mValue) {
+                $aMergedModuleSettings[$sName] = array('value' => $mValue, 'type' => null);
+            }
+
+            // Save all that is not part of $this->aConfiguration['excludeFields'])
+            foreach ($aMergedModuleSettings as $sVarName => $aVarValue) {
+                // We do not want to override with default values of fields which
+                // excluded from configuration export
+                // as this will override those values with every config import.
+                if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+                    continue;
+                }
+
+
+                $this->saveShopVar($sVarName, $aVarValue['value'], "module:$sModuleId", $aVarValue["type"]);
+            }
+
+//            if ($aDefaultModuleSettings) {
+//                $aModuleOverride = $aModulesOverrides[$sModuleId];
+//                foreach ($aDefaultModuleSettings as $aValue) {
+//                    $sVarName = $aValue["name"];
+//                    // We do not want to override with default values of fields which
+//                    // excluded from configuration export
+//                    // as this will override those values with every config import.
+//                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+//                        continue;
+//                    }
+//                    $mVarValue = $aValue["value"];
+//                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
+//                        $mVarValue = $aModuleOverride[$sVarName];
+//                    }
+//
+//                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
+//                }
+//            }
         }
     }
 
