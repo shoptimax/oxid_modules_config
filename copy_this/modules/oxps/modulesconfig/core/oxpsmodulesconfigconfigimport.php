@@ -198,6 +198,10 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $oConfig = oxSpecificShopConfig::get($sShopId);
         $this->oConfig = $oConfig;
 
+
+        $disabledModulesBeforeImport = $oConfig->getConfigParam('aDisabledModules');
+        $modulesKnownBeforeImport = $oConfig->getConfigParam('aModuleVersions');
+
         $this->importModuleConfig($aConfigValues);
         $aModuleVersions = $this->restoreGeneralShopSettings($aConfigValues);
 
@@ -225,7 +229,21 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                 continue;
             }
 
-            //fix state again because class chain was reseted by the import above
+            //execute activate event
+            if ($this->aConfiguration['executeModuleActivationEvents'] && $oModule->isActive()) {
+                $wasDeactivatedBeforeImport = isset($modulesKnownBeforeImport[$sModuleId]) && isset($disabledModulesBeforeImport[$sModuleId]);
+                $wasUnkownBeforeImport = !isset($modulesKnownBeforeImport[$sModuleId]);
+                if($wasDeactivatedBeforeImport || $wasUnkownBeforeImport) {
+                    if ($oModuleStateFixer != null) {
+                        $oModuleStateFixer->activate($oModule);
+                    } else {
+                        $oModule->activate();
+                    }
+                }
+            }
+
+            //fix state again because class chain was reset by the import above
+            //also onActivate call event can cause duplicate tpl blocks
             if ($oModuleStateFixer != null) {
                 if (method_exists($oModuleStateFixer, 'setDebugOutput')) {
                     $oModuleStateFixer->setDebugOutput($this->getDebugOutput());
@@ -241,14 +259,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                 $oModule->fixEvents();
             }
 
-            //execute activate event
-            if ($this->aConfiguration['executeModuleActivationEvents'] && $oModule->isActive()) {
-                if ($oModuleStateFixer != null) {
-                    $oModuleStateFixer->activate($oModule);
-                } else {
-                    $oModule->activate();
-                }
-            }
+
             $sCurrentVersion = $oModule->getInfo("version");
             if ($sCurrentVersion != $sVersion) {
                 $this->oOutput->writeLn(
@@ -299,61 +310,24 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             // restore default module settings
             /** @var oxModule $oModule */
             $aDefaultModuleSettings = $oModule->getInfo("settings");
+            if ($aDefaultModuleSettings) {
+                $aModuleOverride = $aModulesOverrides[$sModuleId];
+                foreach ($aDefaultModuleSettings as $aValue) {
+                    $sVarName = $aValue["name"];
+                    // We do not want to override with default values of fields which
+                    // excluded from configuration export
+                    // as this will override those values with every config import.
+                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+                        continue;
+                    }
+                    $mVarValue = $aValue["value"];
+                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
+                        $mVarValue = $aModuleOverride[$sVarName];
+                    }
 
-            // Ensure both arrays are array/not null
-            $aTmp = is_null($aDefaultModuleSettings) ? array() : $aDefaultModuleSettings;
-            $aDefaultModuleSettings = array();
-            foreach ($aTmp as $aSetting) {
-                $aDefaultModuleSettings[$aSetting['name']] = $aSetting;
-            }
-            // array ($key => $value)
-            $aModuleOverrides = is_null($aModulesOverrides[$sModuleId]) ? array() : $aModulesOverrides[$sModuleId];
-
-            // merge from aModulesOverwrite into aDefaultModuleSettings
-            $aMergedModuleSettings = array();
-            foreach ($aDefaultModuleSettings as $sName => $aDefaultModuleSetting) {
-                if (array_key_exists($sName, $aModuleOverrides)) {
-                    $aDefaultModuleSetting['value'] = $aModuleOverrides[$sName];
-                    unset($aModuleOverrides[$sName]);
+                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
                 }
-                $aMergedModuleSettings[$sName] = $aDefaultModuleSetting;
             }
-
-            foreach ($aModuleOverrides as $sName => $mValue) {
-                $aMergedModuleSettings[$sName] = array('value' => $mValue, 'type' => null);
-            }
-
-            // Save all that is not part of $this->aConfiguration['excludeFields'])
-            foreach ($aMergedModuleSettings as $sVarName => $aVarValue) {
-                // We do not want to override with default values of fields which
-                // excluded from configuration export
-                // as this will override those values with every config import.
-                if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
-                    continue;
-                }
-
-
-                $this->saveShopVar($sVarName, $aVarValue['value'], "module:$sModuleId", $aVarValue["type"]);
-            }
-
-//            if ($aDefaultModuleSettings) {
-//                $aModuleOverride = $aModulesOverrides[$sModuleId];
-//                foreach ($aDefaultModuleSettings as $aValue) {
-//                    $sVarName = $aValue["name"];
-//                    // We do not want to override with default values of fields which
-//                    // excluded from configuration export
-//                    // as this will override those values with every config import.
-//                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
-//                        continue;
-//                    }
-//                    $mVarValue = $aValue["value"];
-//                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
-//                        $mVarValue = $aModuleOverride[$sVarName];
-//                    }
-//
-//                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
-//                }
-//            }
         }
     }
 
