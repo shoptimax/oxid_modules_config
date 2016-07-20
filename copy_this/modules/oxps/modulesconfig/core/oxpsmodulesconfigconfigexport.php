@@ -300,12 +300,6 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                     ksort($mVarValue);
                 }
 
-                $mVarValue = $this->varValueWithTypeInfo(
-                    $sVarName,
-                    $mVarValue,
-                    $sVarType
-                );
-
                 if ($sVarName === 'aModuleVersions') {
                     //aModuleVersions is needed to compare the version on config import so you can be warned
                     //if the import does not match the code version and may be wrong or have wrong assumptions
@@ -319,6 +313,12 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                     }
 
                 }
+                
+                $mVarValue = $this->varValueWithTypeInfo(
+                    $sVarName,
+                    $mVarValue,
+                    $sVarType
+                );
 
                 $sSection = $this->sNameForGeneralShopSettings;
                 $aGroupedValues[$sShopId][$sSection][$sVarName] =
