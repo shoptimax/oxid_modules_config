@@ -59,6 +59,20 @@ class OxpsConfigImportCommand extends oxConsoleCommand
     public function execute(oxIOutput $oOutput)
     {
         $oInput        = $this->getInput();
+        if (!class_exists('oxpsModulesConfigConfigImport')) {
+            $oOutput->writeLn('Config importer is not active trying to activate...');
+            $oModuleInstaller = oxRegistry::get('oxModuleInstaller');
+            $oxModuleList = oxNew('oxModuleList');
+            $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
+            $aModules = $oxModuleList->getList();
+            /** @var oxModule $oModule */
+            $oModule = $aModules['oxpsmodulesconfig'];
+            $oModuleInstaller->activate($oModule);
+
+            //workaround for issue in oxid see https://github.com/OXID-eSales/oxideshop_ce/pull/413
+            $utilsObject = oxUtilsObject::getInstance();
+            $utilsObject->setModuleVar('aModuleFiles',null);
+        }
         $oConfigExport = oxNew('oxpsModulesConfigConfigImport', $oOutput, $oInput);
         $oConfigExport->executeConsoleCommand();
     }
