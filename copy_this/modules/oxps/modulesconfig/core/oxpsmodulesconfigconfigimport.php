@@ -361,7 +361,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $sShopId = $this->sShopId;
         $oConfig = $this->oConfig;
 
-        $value = $oConfig->getShopConfVar($sVarName, $sShopId);
+        $value = $oConfig->getShopConfVar($sVarName, $sShopId, $sSectionModule);
 
         if ($sVarType === null) {
             list($sVarType, $mVarValue) = $this->getTypeAndValue($sVarName, $mVarValue);
