@@ -185,6 +185,13 @@ abstract class OxpsConfigCommandBase
         $oConfig = oxRegistry::getConfig();
         $sPathToThisModule = $oConfig->getModulesDir() . 'oxps' . DIRECTORY_SEPARATOR . 'modulesconfig' . DIRECTORY_SEPARATOR;
         $sRelativeConfigurationDirectoryPath = $oConfig->getConfigParam('OXPS_MODULESCONFIG_SETTING_CONFIGURATION_DIRECTORY');
+
+        // Prevent empty result when parameter is not configured yet (in order to find a working configuration).
+        if (!isset($sRelativeConfigurationDirectoryPath))
+        {
+            $sRelativeConfigurationDirectoryPath = 'configurations';
+        }
+
         if(is_string($sRelativeConfigurationDirectoryPath)){
             $sRelativeConfigurationDirectoryPath = trim($sRelativeConfigurationDirectoryPath, '/');
         }
