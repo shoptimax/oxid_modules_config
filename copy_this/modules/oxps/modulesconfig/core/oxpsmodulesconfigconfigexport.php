@@ -143,6 +143,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     {
         $oDebugOutput = $this->getDebugOutput();
         $sSql = "DELETE FROM oxconfig WHERE oxmodule = 'module:{$sModuleId}'";
+        $sSql2 = "DELETE FROM oxtplblocks WHERE oxmodule = '{$sModuleId}'";
         $blForceClean = $this->oInput->getOption('force-cleanup');
         //TODO add option force-repaire and repair module path to be sure module realy not exists
         if ($blForceClean) {
@@ -150,8 +151,11 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             //TODO mark already cleaned modules
             $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql");
             oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->execute($sSql);
+            $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql2");
+            oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->execute($sSql2);
+            //TODO: should also fix module version array
         } else {
-            $oDebugOutput->writeLn("[ERROR] {$sModuleId} does not exist. use --force-cleanup or run $sSql ");
+            $oDebugOutput->writeLn("[ERROR] {$sModuleId} does not exist. use --force-cleanup or run $sSql; $sSql2 ");
             $oDebugOutput->writeLn("[ERROR] config for {$sModuleId} will not be included in export");
         }
     }
@@ -160,6 +164,8 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     function withoutDefaults(&$aGroupedValues)
     {
         foreach ($aGroupedValues as $sShopId => &$aShopConfig) {
+            $aGeneralConfig = &$aShopConfig[$this->sNameForGeneralShopSettings];
+
             if (isset($aShopConfig['module'])) {
                 $aModuleConfigs = &$aShopConfig['module'];
 
@@ -173,9 +179,15 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                         unset ($aModuleConfigs[$sModuleId]);
                         continue;
                     }
-                    $aDefaultModuleSettings = $oModule->getInfo("settings");
+                    $aDefaultModuleSettings = is_null($oModule->getInfo("settings")) ? array() : $oModule->getInfo("settings");
                     foreach ($aDefaultModuleSettings as $aConfigValue) {
                         $sVarName = $aConfigValue['name'];
+                        if(array_key_exists($sVarName,$aGeneralConfig)) {
+                            //if a module safe a value twice once in module namespace and once in general namespace only export the value from the
+                            //modulename space because it this happens only when the config table hase some corrupted data
+                            $this->oOutput->writeLn("$sVarName from module $sModuleId is also configured in global namespace in shop $sShopId");
+                            unset($aGeneralConfig[$sVarName]);
+                        }
                         $sDefaultType = $aConfigValue['type'];
                         $mDefaultValue = $aConfigValue['value'];
 
@@ -199,7 +211,6 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                 }
             }
             $aDefaultGeneralConfig = $this->aDefaultConfig[$this->sNameForGeneralShopSettings];
-            $aGeneralConfig = &$aShopConfig[$this->sNameForGeneralShopSettings];
             foreach ($aGeneralConfig as $sVarName => $mCurrentValue) {
                 $mDefaultValue = $aDefaultGeneralConfig[$sVarName];
                 if ($mCurrentValue === $mDefaultValue) {
@@ -263,7 +274,8 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                 }
             }
 
-            if (!$sModule) {
+            //general shop settings
+            if ($sSection == "") {
 
                 //restored from module metadata by import:
                 if (in_array(
@@ -307,13 +319,15 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                     $oModule = oxNew('oxModule');
                     foreach ($mVarValue as $sModuleId => $sVersion) {
                         if (!$oModule->load($sModuleId)) {
-                            $this->handleModuleOnError($sModuleId);
+                            $oOutput = $this->oOutput;
+                            $oOutput->writeLn("[ERROR] config for {$sModuleId} will not be included in export for shop $sShopId because module can not be loaded.
+                            This can be caused by invalid setting in aModuleVersion config setting, and by fixed be import that config");
                             unset($mVarValue[$sModuleId]);
                         }
                     }
 
                 }
-                
+
                 $mVarValue = $this->varValueWithTypeInfo(
                     $sVarName,
                     $mVarValue,
@@ -327,8 +341,15 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                 if ($sSection != 'module') {
                     $mVarValue = $this->varValueWithTypeInfo($sVarName, $mVarValue, $sVarType);
                 }
-                $aGroupedValues[$sShopId][$sSection][$sModule][$sVarName] =
-                    $mVarValue;
+                if ($sModule) {
+                    $aGroupedValues[$sShopId][$sSection][$sModule][$sVarName] =
+                        $mVarValue;
+                } else {
+                    $this->oOutput->writeLn("incompatible section '$sSection' found ignoring config value '$sVarName'
+                    use sql: DELETE FROM oxconfig WHERE oxmodule = '$sSection' to clean up if it is trash.;
+                    ");
+
+                }
             }
         }
 

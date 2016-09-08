@@ -1,13 +1,13 @@
 <?php
 
 return array(
-    'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations',
-    'type' => 'yaml',
-    'executeModuleActivationEvents' => false,
+    'dir'                           => getShopBasePath() . '/modules/oxps/modulesconfig/configurations',
+    'type'                          => 'yaml',
+    'executeModuleActivationEvents' => true,
     //config fields that should never ever go to the config export
     //because they are generated or sensible in any way
     //TODO: document them
-    'excludeFields' => array(
+    'excludeFields'                 => array(
         'aServersData',
         'blEnableIntangibleProdAgreement',
         'blShowTSCODMessage',
@@ -18,18 +18,38 @@ return array(
         'sOnlineLicenseCheckTime',
         'sOnlineLicenseNextCheckTime',
         'sParcelService',
+        'blUseContentCaching',
+        'iTimeToUpdatePrices', //timestamp to check if cron jobs must be executed
+        'iFailedOnlineCallsCount', //sometimes good to not exclude this to have value be restored to 0 on import, but on the other hand
+        //bad to having this field be exported from vm where the firewall may block license check
+        /* d3 */
+        'd3RemoteServerCache',
+        /* Oxsearch */
+        'marmOxsearchImporterStatus' //status of the last transfer to elasticsearch. excluded because it is related to the cluster where the export was executed
+
+        /* Project specific settings */
+
+        /* /Project specific settings */
+
     ),
     //environment specific fields
-    'envFields' => array(
+    'envFields'                     => array(
         'aSerials', //oxid serial numbers. Must be different on live system.
         'OXSERIAL', // generated single serial number from all aSerials
         'sMallShopURL',
         'sMallSSLShopURL',
         'blCheckTemplates', //sets if templates should be recompililed on change good in develop env
+        'aMemcachedServers',
 
         /* oxshops table */
         'OXPRODUCTIVE',
-        
+        'OXSMTP',
+        'OXSMTPUSER',
+        'OXINFOEMAIL',
+        'OXORDEREMAIL',
+        'OXOWNEREMAIL',
+        /* END oxshops table */
+
         /* Paypal development settings */
         'blOEPayPalSandboxMode',
         'blPayPalLoggerEnabled',
@@ -43,7 +63,14 @@ return array(
         'sOEPayPalSandboxUsername',
         /* END Paypal development settings END */
 
-        /* Factfinder development settings */
+        /* modul specific settings keep them even if you do not use them,
+           so you do not have to get them again when you use one of them
+        */
+
+        /* oxsearch */
+        'marm_oxsearch_config'
+        /* END oxsearch specific settings */
+        /* Factfinder */
         'swFF.authentication.password',
         'swFF.authentication.username',
         'swFF.context',
@@ -54,10 +81,12 @@ return array(
         'o2c_sUserPassword',
         'o2c_sSoapServerAddress',
     ),
-    'env' => array(
-        //'develop' => array(
-            //'dir' => dirname(__DIR__) . '/../../config/$env' is default
-        //),
+    'env'                           => array(
+        /* map other environments to existing ones when directory names do not match env. names.
+           do NOT list every environment here, only aliases should be defined here
+           default is 
+           dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/$env'
+        */
 
         /* map other environments to existing ones */
         'development' => array(
@@ -69,5 +98,5 @@ return array(
         'testing' => array(
             'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/testing',
         )
-    ),
+    )
 );

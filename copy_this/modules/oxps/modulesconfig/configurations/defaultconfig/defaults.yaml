@@ -1,5 +1,5 @@
 Meta:
-    sDefaultsVersion: "1.1"
+    sDefaultsVersion: "1.2"
 GeneralShopSettings:
     aCachableClasses:
         - info
@@ -50,7 +50,6 @@ GeneralShopSettings:
             active: '1'
             sort: '1'
             default: '1'
-            o2c_idlang: 1
         en:
             baseId: 1
             active: '0'
@@ -92,6 +91,8 @@ GeneralShopSettings:
             - oe/oepaypal/components/widgets/oepaypaloxwarticledetails
         payment:
             - oe/oepaypal/controllers/oepaypalpayment
+    aMemcachedServers:
+        - localhost@11211@100
     aMustFillFields:
         - oxuser__oxfname
         - oxuser__oxlname
@@ -172,6 +173,7 @@ GeneralShopSettings:
     blBasketExcludeEnabled:
         str: '0'
     blBidirectCross: ''
+    blCacheActive: ''
     blCalculateDelCostIfNotLoggedIn: ''
     blCheckForUpdates: '1'
     blCheckTemplates: '1'
@@ -286,6 +288,7 @@ GeneralShopSettings:
     iAttributesPercent: '70'
     iCacheLifeTime: '36000'
     iCntofMails: '20'
+    iDefaultCacheTTL: ''
     iDefSeoLang: '0'
     iDownloadExpirationTime: '24'
     iExportNrofLines: '250'
@@ -321,11 +324,14 @@ GeneralShopSettings:
     iTop5Mode: '1'
     iUseGDVersion: '2'
     sAdditionalServVATCalcMethod: biggest_net
+    sCacheBackend: OXID
+    sCacheDir: cache
     sCatThumbnailsize: '748*150'
     sCntOfNewsLoaded: '1'
     sCSVSign: ;
     sCustomTheme: 123tv
     sDecimalSeparator: ','
+    sDefaultCacheConnector: ''
     sDefaultImageQuality: '75'
     sDefaultLang: '0'
     sDownloadsDir: out/downloads

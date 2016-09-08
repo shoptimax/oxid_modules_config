@@ -41,6 +41,14 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
      */
     protected $sShopId;
 
+    /**
+     * @var array "name+module" => type
+     * used to check if the imported config value type matches the stored type in the oxconfig table
+     * if not the type must be overridden.
+     * it helps to avoid unnecessary db rights on deployment
+     */
+    protected $storedVarTypes = [];
+
     /*
      * executes all functionality which is necessary for a call of OXID console config:import
      *
@@ -165,9 +173,12 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                 ""
             );
         }
+        $oShop->setShopId($sShopId);
         $aOxShopSettings = $aConfigValues['oxshops'];
         if ($aOxShopSettings) {
             $oShop->assign($aOxShopSettings);
+            //fake active shopid to allow derived update
+            $oShop->getConfig()->setShopId($sShopId);
             $oShop->save();
             for ($i = 1; $i <= 3; $i++) {
                 $oShop->setLanguage($i);
@@ -197,6 +208,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
 
         $oConfig = oxSpecificShopConfig::get($sShopId);
         $this->oConfig = $oConfig;
+        oxRegistry::set('oxConfig',$oConfig);
 
 
         $disabledModulesBeforeImport = $oConfig->getConfigParam('aDisabledModules');
@@ -205,7 +217,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $this->importModuleConfig($aConfigValues);
         $aModuleVersions = $this->restoreGeneralShopSettings($aConfigValues);
 
-        $this->importThemeConfig($aConfigValues['theme'], $sShopId);
+        $this->importThemeConfig($aConfigValues['theme']);
 
         if (class_exists('oxModuleStateFixer')) {
             //since 5.2 we have the oxModuleStateFixer in the oxid console
@@ -283,7 +295,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
      */
     protected function importModuleConfig(&$aConfigValues)
     {
-        $aModulesOverrides = $aConfigValues['module'];
+        $allModulesConfigFromYaml = $aConfigValues['module'];
 
         $oConfig = $this->oConfig;
         $oxModuleList = oxNew('oxModuleList');
@@ -310,24 +322,65 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             // restore default module settings
             /** @var oxModule $oModule */
             $aDefaultModuleSettings = $oModule->getInfo("settings");
-            if ($aDefaultModuleSettings) {
-                $aModuleOverride = $aModulesOverrides[$sModuleId];
-                foreach ($aDefaultModuleSettings as $aValue) {
-                    $sVarName = $aValue["name"];
-                    // We do not want to override with default values of fields which
-                    // excluded from configuration export
-                    // as this will override those values with every config import.
-                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
-                        continue;
-                    }
-                    $mVarValue = $aValue["value"];
-                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
-                        $mVarValue = $aModuleOverride[$sVarName];
-                    }
-
-                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
+            $aModuleOverride = $allModulesConfigFromYaml[$sModuleId];
+//            if ($aDefaultModuleSettings) {
+//                $aModuleOverride = $aModulesOverrides[$sModuleId];
+//                foreach ($aDefaultModuleSettings as $aValue) {
+//                    $sVarName = $aValue["name"];
+//                    // We do not want to override with default values of fields which
+//                    // excluded from configuration export
+//                    // as this will override those values with every config import.
+//                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+//                        continue;
+//                    }
+//                    $mVarValue = $aValue["value"];
+//                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
+//                        $mVarValue = $aModuleOverride[$sVarName];
+//                    }
+//
+//                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
+//                }
+//            }
+            // Ensure both arrays are array/not null
+            $aTmp = is_null($aDefaultModuleSettings) ? array() : $aDefaultModuleSettings;
+            $aDefaultModuleSettings = array();
+            foreach ($aTmp as $nr => $aSetting) {
+                if(!is_array($aSetting)) {
+                    throw new \Exception("Error in metadata.php settings of $sModuleId in setting nr/key '$nr'. Value '" . print_r($aSetting,true) ."' is not an array!");
                 }
+                $aDefaultModuleSettings[$aSetting['name']] = $aSetting;
             }
+            // array ($key => $value)
+            $aModuleOverride = is_null($allModulesConfigFromYaml[$sModuleId]) ? array() : $allModulesConfigFromYaml[$sModuleId];
+
+            // merge from aModulesOverwrite into aDefaultModuleSettings
+            $aMergedModuleSettings = array();
+            foreach ($aDefaultModuleSettings as $sName => $aDefaultModuleSetting) {
+                if (array_key_exists($sName, $aModuleOverride)) {
+                    //print "module:$sModuleId $sName $aModuleOverride\n";
+                    $aDefaultModuleSetting['value'] = $aModuleOverride[$sName];
+                    unset($aModuleOverride[$sName]);
+                }
+                $aMergedModuleSettings[$sName] = $aDefaultModuleSetting;
+            }
+
+            foreach ($aModuleOverride as $sName => $mValue) {
+                $aMergedModuleSettings[$sName] = array('value' => $mValue, 'type' => null);
+            }
+
+            // Save all that is not part of $this->aConfiguration['excludeFields'])
+            foreach ($aMergedModuleSettings as $sVarName => $aVarValue) {
+                // We do not want to override with default values of fields which
+                // excluded from configuration export
+                // as this will override those values with every config import.
+                if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+                    continue;
+                }
+
+
+                $this->saveShopVar($sVarName, $aVarValue['value'], "module:$sModuleId", $aVarValue["type"]);
+            }
+
         }
     }
 
@@ -356,12 +409,29 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         return array($sVarType, $mVarValue);
     }
 
+    protected function getStoredVarTypes()
+    {
+        $db = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $sQ = "select CONCAT(oxvarname,'+',oxmodule) as mapkey, oxvartype from oxconfig where oxshopid = ?";
+        $allRows = $db->getAll($sQ, [$this->sShopId]);
+        $map = [];
+        foreach($allRows as $row) {
+            $map[$row['mapkey']] = $row['oxvartype'];
+        }
+        return $map;
+    }
+    public function getShopConfType($sVarName,$sSectionModule)
+    {
+        return $this->storedVarTypes[$sVarName.'+'.$sSectionModule];
+    }
+
     protected function saveShopVar($sVarName, $mVarValue, $sSectionModule, $sVarType = null)
     {
         $sShopId = $this->sShopId;
         $oConfig = $this->oConfig;
 
         $value = $oConfig->getShopConfVar($sVarName, $sShopId, $sSectionModule);
+        $type = $this->getShopConfType($sVarName,$sSectionModule);
 
         if ($sVarType === null) {
             list($sVarType, $mVarValue) = $this->getTypeAndValue($sVarName, $mVarValue);
@@ -377,7 +447,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             }
         }
 
-        if ($mVarValue !== $value) {
+        if ($mVarValue !== $value || $sVarType !== $type) {
             $oConfig->saveShopConfVar(
                 $sVarType,
                 $sVarName,
@@ -385,6 +455,13 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                 $sShopId,
                 $sSectionModule
             );
+        }
+        if(strpos($sSectionModule,'module') === 0) {
+            if($existsAlsoInGlobalNameSpace = $this->getShopConfType($sVarName,'')) {
+                $db = oxDb::getDb();
+                $db->execute("DELETE FROM oxconfig WHERE oxshopid = ? AND oxvarname = ? AND oxmodule = ''",[$this->sShopId,$sVarName]);
+                $this->oOutput->writeLn("the config value $sVarName from module $sSectionModule was delete from global namespace");
+            }
         }
     }
 
@@ -420,6 +497,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
     {
         foreach ($aShops as $sShop => $sFileName) {
             $this->sShopId = $sShop;
+            $this->storedVarTypes = $this->getStoredVarTypes();
             $this->runShopConfigImportForOneShop($sShop, $sFileName);
         }
     }

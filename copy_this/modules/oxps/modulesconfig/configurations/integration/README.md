@@ -1,1 +1,1 @@
-# Integration related configurations are stored here.
+# Testing related configurations are stored here.
