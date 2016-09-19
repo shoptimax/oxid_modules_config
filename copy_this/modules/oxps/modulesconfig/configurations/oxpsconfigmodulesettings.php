@@ -1,7 +1,7 @@
 <?php
 
 return array(
-    'dir'                           => getShopBasePath() . '/modules/oxps/modulesconfig/configurations',
+    'dir'                           => getShopBasePath() . '/../configurations',
     'type'                          => 'yaml',
     'executeModuleActivationEvents' => true,
     //config fields that should never ever go to the config export
@@ -19,13 +19,16 @@ return array(
         'sOnlineLicenseNextCheckTime',
         'sParcelService',
         'blUseContentCaching',
-        'iTimeToUpdatePrices', //timestamp to check if cron jobs must be executed
-        'iFailedOnlineCallsCount', //sometimes good to not exclude this to have value be restored to 0 on import, but on the other hand
+        'iTimeToUpdatePrices',
+        //timestamp to check if cron jobs must be executed
+        'iFailedOnlineCallsCount',
+        //sometimes good to not exclude this to have value be restored to 0 on import, but on the other hand
         //bad to having this field be exported from vm where the firewall may block license check
         /* d3 */
         'd3RemoteServerCache',
         /* Oxsearch */
-        'marmOxsearchImporterStatus' //status of the last transfer to elasticsearch. excluded because it is related to the cluster where the export was executed
+        'marmOxsearchImporterStatus'
+        //status of the last transfer to elasticsearch. excluded because it is related to the cluster where the export was executed
 
         /* Project specific settings */
 
@@ -68,7 +71,7 @@ return array(
         */
 
         /* oxsearch */
-        'marm_oxsearch_config'
+        'marm_oxsearch_config',
         /* END oxsearch specific settings */
         /* Factfinder */
         'swFF.authentication.password',
@@ -89,14 +92,14 @@ return array(
         */
 
         /* map other environments to existing ones */
-        'development' => array(
-            'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/development',
+        'development'   => array(
+            'dir' => getShopBasePath() . '/../configurations/development',
         ),
         'merge-request' => array(
-            'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/integration',
+            'dir' => getShopBasePath() . '/../configurations/integration',
         ),
-        'testing' => array(
-            'dir' => getShopBasePath() . '/modules/oxps/modulesconfig/configurations/testing',
+        'testing'       => array(
+            'dir' => getShopBasePath() . '/../configurations/testing',
         )
     )
 );
