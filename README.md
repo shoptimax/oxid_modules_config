@@ -16,6 +16,10 @@ All relevant modules configuration is being used including: Versions, Extended c
 ## Installation
  - Copy the content of `copy_this/` folder to OXID eShop root folder
  - Activate the module in administration area
+ 
+## Development
+In order to run the tests you need to have the [OXID testing-library v1.0.6](https://github.com/OXID-eSales/testing_library/tree/v1.0.6) installed. As best practice the testing-library
+should be installed in shop vendor directory.
 
 ## Usage
 

@@ -338,10 +338,7 @@ class Admin_oxpsModulesConfigDashboard extends oxAdminView
             $this->getValidator()->addErrors((array) $oModulesConfig->getImportErrors());
         } else {
             $this->addMessage('OXPS_MODULESCONFIG_MSG_IMPORT_SUCCESS');
-
-            /** @var oxpsModulesConfigModule $oModule */
-            $oModule = oxNew('oxpsModulesConfigModule');
-            $oModule->clearTmp();
+            oxpsModulesConfigModule::clearTmp();
         }
     }
 }
