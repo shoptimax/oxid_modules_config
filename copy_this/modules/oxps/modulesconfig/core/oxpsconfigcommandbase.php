@@ -58,9 +58,6 @@ abstract class OxpsConfigCommandBase
 
     /**
      * Sets output stream, gets environment from commandline, init configuration and set debug output stream.
-     *
-     * @param oxIOutput $oOutput
-     * @param object $oInput
      */
     protected function init()
     {
