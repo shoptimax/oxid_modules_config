@@ -95,7 +95,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $aResult = $this->merge_config($this->aDefaultConfig, $aResult);
 
         if ($this->sEnv) {
-            $sEnvDirName = $this->getEnviromentConfigDir();
+            $sEnvDirName = $this->getEnvironmentConfigDir();
             $sFileName = $sEnvDirName . $sRelativeFileName;
             $aEnvConfig = $this->readConfigValues($sFileName);
             $aResult = $this->merge_config($aResult, $aEnvConfig);

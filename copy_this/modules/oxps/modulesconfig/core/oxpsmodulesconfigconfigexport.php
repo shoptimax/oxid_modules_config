@@ -57,7 +57,7 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             $aReturn = $this->getConfigValues($this->aConfiguration['envFields'], true);
 
             // write environment specific config values to files
-            $this->writeDataToFileSeperatedByShop($this->getEnviromentConfigDir(), $aReturn);
+            $this->writeDataToFileSeperatedByShop($this->getEnvironmentConfigDir(), $aReturn);
 
             $aMetaConfigFile['shops'] = $aShops;
             $aMetaConfigFile[$this->sNameForMetaData] = $this->aDefaultConfig[$this->sNameForMetaData];
