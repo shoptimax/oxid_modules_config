@@ -4,8 +4,6 @@
 
 ----
 
-A previous version of this module with less features is on [GitHub](https://github.com/druteika/oxid_modules_config).
-
 Tools to export, backup and import OXID eShop modules, module settings, shop settings and module activation.
 There are 2 ways to use the functionality:
 * via OXID console commands
@@ -20,3 +18,6 @@ All relevant modules configuration is being used including: Versions, Extended c
 ## Usage
 
 See Wiki
+
+## History
+A previous version of this module with less features is on [GitHub](https://github.com/druteika/oxid_modules_config).
