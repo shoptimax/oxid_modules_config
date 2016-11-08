@@ -66,15 +66,16 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         } catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
             $this->getDebugOutput()->writeLn("Could not parse a YAML File.");
             $this->getDebugOutput()->writeLn($e->getMessage());
+            exit(1);
         } catch (oxFileException $oEx) {
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($oEx->getMessage());
-
-            return;
+            exit(2);
         } catch (RuntimeException $e) {
             $this->getDebugOutput()->writeLn("Could not complete.");
             $this->getDebugOutput()->writeLn($e->getMessage());
             $this->getDebugOutput()->writeLn($e->getTraceAsString());
+            exit(3);
         }
     }
 
