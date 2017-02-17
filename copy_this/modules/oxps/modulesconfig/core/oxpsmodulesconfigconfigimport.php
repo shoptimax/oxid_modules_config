@@ -302,6 +302,10 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $oxModuleList = oxNew('oxModuleList');
         $oxModuleList->setConfig($oConfig);
 
+        $exclude = $this->aConfiguration['excludeFields'];
+        $excludeDeep = array_filter($exclude,'is_array');
+        $excludeFlat = array_flip(array_filter($exclude,'is_string'));
+
         /**
          * @var oxModuleList $oxModuleList
          * //it is important to call this method to load new module into the shop
@@ -323,25 +327,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             // restore default module settings
             /** @var oxModule $oModule */
             $aDefaultModuleSettings = $oModule->getInfo("settings");
-            $aModuleOverride = $allModulesConfigFromYaml[$sModuleId];
-//            if ($aDefaultModuleSettings) {
-//                $aModuleOverride = $aModulesOverrides[$sModuleId];
-//                foreach ($aDefaultModuleSettings as $aValue) {
-//                    $sVarName = $aValue["name"];
-//                    // We do not want to override with default values of fields which
-//                    // excluded from configuration export
-//                    // as this will override those values with every config import.
-//                    if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
-//                        continue;
-//                    }
-//                    $mVarValue = $aValue["value"];
-//                    if ($aModuleOverride !== null && array_key_exists($sVarName, $aModuleOverride)) {
-//                        $mVarValue = $aModuleOverride[$sVarName];
-//                    }
-//
-//                    $this->saveShopVar($sVarName, $mVarValue, "module:$sModuleId", $aValue["type"]);
-//                }
-//            }
+
             // Ensure both arrays are array/not null
             $aTmp = is_null($aDefaultModuleSettings) ? array() : $aDefaultModuleSettings;
             $aDefaultModuleSettings = array();
@@ -374,8 +360,25 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
                 // We do not want to override with default values of fields which
                 // excluded from configuration export
                 // as this will override those values with every config import.
-                if (in_array($sVarName, $this->aConfiguration['excludeFields'])) {
+                if ($excludeFlat[$sVarName] ) {
                     continue;
+                }
+                if ($aVarValue["type"] == 'aarr') {
+                    if(isset($excludeDeep[$sVarName])) {
+                        $innerExcludes = $excludeDeep[$sVarName];
+                        if (!is_array( $innerExcludes )) {
+                            $innerExcludes = [$innerExcludes];
+                        }
+                        $value         = &$aVarValue['value'];
+                        $original      = $this->oConfig->getConfigParam( $sVarName );
+                        if ($original) {
+                            foreach ($innerExcludes as $exclude) {
+                                $value[$exclude] = $original[$exclude];
+                            }
+                        }//else if the value is included in the dump but not avail in the database,
+                        // that use it as default, that may be handy to have values that are imported once but not
+                        // overwritten after that
+                    }
                 }
 
 
@@ -399,7 +402,10 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             }
         } elseif (is_array($mVarValue)) {
             $sVarType = 'arr';
+        } elseif(is_bool($mVarValue)) {
+            $sVarType = 'bool';
         } else {
+            //deprecated check for 'bl'
             if (substr($sVarName, 0, 2) === "bl") {
                 $sVarType = 'bool';
             } else {

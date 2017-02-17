@@ -365,13 +365,19 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
         } else {
             // default type
             $typeInfoNeeded = true;
-            if ($sVarType == 'str' || $sVarType == 'bool') {
+            $boolPrefix = substr($sVarName, 0, 2) === "bl";
+
+            if ($sVarType == 'str' && !$boolPrefix) {
                 $typeInfoNeeded = false;
-                if (substr($sVarName, 0, 2) === "bl") {
-                    if ($sVarType !== 'bool') {
-                        $typeInfoNeeded = true;
-                    }
-                }
+            }
+
+            if ($sVarType == 'bool' && $boolPrefix) {
+                $typeInfoNeeded = false;
+            }
+
+            if ($sVarType == 'bool' && ($mVarValue === '1' || $mVarValue === '' || $mVarValue === 'true' || $mVarValue === 'false')) {
+                $mVarValue = (bool) $mVarValue;
+                $typeInfoNeeded = false;
             }
 
             if ($typeInfoNeeded) {
