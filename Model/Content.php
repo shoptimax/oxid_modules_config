@@ -24,11 +24,13 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
+namespace OxidProfessionalServices\ConfigExportImport\Model;
+
 /**
  * Class oxpsModulesConfigContent
  * Module configuration import and export content handler defines what data is used in the processes.
  */
-class oxpsModulesConfigContent extends oxSuperCfg
+class Content extends \OxidEsales\EshopEnterprise\Core\Base
 {
 
     /**
@@ -55,15 +57,15 @@ class oxpsModulesConfigContent extends oxSuperCfg
     public function getModulesList()
     {
         /** @var oxModuleList $oModuleList */
-        $oModuleList = oxNew('oxModuleList');
+        $ModuleList = oxNew(\OxidEsales\Eshop\Core\Module\ModuleList);
 
         // Get all modules data
-        $aAllModules = $oModuleList->getModulesFromDir($this->getConfig()->getModulesDir());
+        $AllModules = $ModuleList->getModulesFromDir($this->getConfig()->getModulesDir());
 
         // Exclude system modules like the OXID Module Configuration Im-/Exporter itself
-        $aModules = array_diff_key($aAllModules, array_combine($this->_aExcludeModules, $this->_aExcludeModules));
+        $Modules = array_diff_key($AllModules, array_combine($this->_aExcludeModules, $this->_aExcludeModules));
 
-        return $aModules;
+        return $Modules;
     }
 
     /**

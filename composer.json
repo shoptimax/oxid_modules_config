@@ -1,0 +1,22 @@
+{
+  "name": "oxid-community/oxid_modules_config",
+  "description": "OXID core and module configurations importer and exporter",
+  "version":  "1.0.0",
+  "type": "oxideshop-module",
+  "keywords": ["oxid", "modules", "eShop", "oxconfig", "config", "export"],
+  "license": "GPL-3.0",
+  "require": {
+    "php": ">=5.6",
+    "symfony/yaml": "*"
+  },
+  "extra": {
+    "oxideshop": {
+      "target-directory": "oxps/modulesconfig"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "OxidProfessionalServices\\ConfigExportImport\\": "../../../source/modules/oxps/modulesconfig"
+    }
+  }
+}

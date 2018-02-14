@@ -24,11 +24,13 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
+namespace OxidProfessionalServices\ConfigExportImport\Model;
+
 /**
  * Class oxpsModulesConfigStorage
  * A model for modules related configuration loading and saving methods.
  */
-class oxpsModulesConfigStorage extends oxConfig
+class Storage extends \OxidEsales\Eshop\Core\Config
 {
 
     /**

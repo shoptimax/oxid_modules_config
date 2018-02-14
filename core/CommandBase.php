@@ -1,11 +1,12 @@
 <?php
 
+namespace OxidProfessionalServices\ConfigExportImport\core;
 use Symfony\Component\Yaml\Yaml;
 
 /**
  *  Class OxpsConfigCommandBase:
  */
-abstract class OxpsConfigCommandBase
+abstract class CommandBase
 {
 
     /**

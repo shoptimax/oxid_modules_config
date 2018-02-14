@@ -24,11 +24,13 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
+namespace OxidProfessionalServices\ConfigExportImport\core;
+
 /**
  * Class oxpsModulesConfigModule
  * Extends oxModule class handles module setup, provides additional tools.
  */
-class oxpsModulesConfigModule extends oxModule
+class Module extends \OxidEsales\Eshop\Core\Module\Module
 {
 
     /**

@@ -31,7 +31,9 @@
  * @todo: Add a checkbox for import force (ignores shop versions, edition and ID differences)
  * @todo: Add checkbox for ALL sub-shops export / import.
  */
-class Admin_oxpsModulesConfigDashboard extends oxAdminView
+namespace OxidProfessionalServices\ConfigExportImport\Controller\Admin;
+
+class Dashboard extends \OxidEsales\Eshop\Application\Controller\Admin\AdminController
 {
 
     /**

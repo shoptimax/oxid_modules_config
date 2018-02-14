@@ -24,13 +24,15 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
+namespace OxidProfessionalServices\ConfigExportImport\core;
+
 /**
  * Class oxpsModulesConfigTransfer
  * Modules configuration export, backup and import actions handler.
  *
  * @todo: Collect JSON encode/decode errors from json_last_error()?
  */
-class oxpsModulesConfigTransfer extends oxSuperCfg
+class Transfer extends oxSuperCfg
 {
 
     /**

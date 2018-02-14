@@ -1,9 +1,0 @@
-{
-    "name": "psprojects/ModulesConfig",
-    "license": "unknown",
-    "type": "project",
-    "description": "An OXID eShop Config exporter/importer",
-    "require": {        
-        "symfony/yaml": "~2.6"
-    }
-}

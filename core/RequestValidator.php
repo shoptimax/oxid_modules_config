@@ -24,11 +24,13 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
+namespace OxidProfessionalServices\ConfigExportImport\core;
+
 /**
  * Class oxpsModulesConfigRequestValidator
  * Modules configuration data validation and error handler.
  */
-class oxpsModulesConfigRequestValidator extends oxSuperCfg
+class RequestValidator extends \OxidEsales\Eshop\Core\Base
 {
 
     /**
