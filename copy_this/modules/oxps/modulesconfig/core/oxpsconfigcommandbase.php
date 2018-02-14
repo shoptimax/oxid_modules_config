@@ -143,6 +143,8 @@ abstract class OxpsConfigCommandBase
         if ($this->aConfiguration === null) {
             $this->aConfiguration = $this->_getModuleSettings();
         }
+        $exclude = $this->aConfiguration['excludeFields'];
+        $this->aConfiguration['excludeDeep'] = array_filter($exclude,'is_array');
 
         $aAllEnvConfigs       = $this->aConfiguration['env'];
         $sFilename            = $sConfigurationsDir . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';

@@ -87,9 +87,12 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     protected function getConfigValues($aConfigFields, $blIncludeMode)
     {
         $sIncludeMode = $blIncludeMode ? '' : 'NOT';
-        $sSql         = "SELECT oxvarname, oxvartype, %s as oxvarvalue, oxmodule, oxshopid from oxconfig
-                 WHERE oxvarname $sIncludeMode IN ('%s') order by oxshopid asc, oxmodule ASC, oxvarname ASC";
-
+        $sSql = "SELECT oxvarname, oxvartype, %s as oxvarvalue, oxmodule, oxshopid, disp.oxvarconstraint, disp.oxgrouping, disp.oxpos
+                 FROM oxconfig as cfg
+                 LEFT JOIN oxconfigdisplay as disp
+                 ON cfg.oxmodule=disp.oxcfgmodule AND cfg.oxvarname=disp.oxcfgvarname
+                 WHERE cfg.oxvarname $sIncludeMode IN ('%s') order by oxshopid asc, oxmodule ASC, oxvarname ASC";
+        
         $sSql = sprintf(
             $sSql,
             oxRegistry::getConfig()->getDecodeValueQuery(),
@@ -98,10 +101,36 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
 
         $aConfigValues  = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll($sSql);
         $aGroupedValues = $this->groupValues($aConfigValues);
+        foreach ($aGroupedValues as $shopid => &$values) {
+            $values = $this->filterNestedExcludes($values);
+        }
+
         $this->addShopConfig($aGroupedValues, $aConfigFields, $blIncludeMode);
         $aGroupedValues = $this->withoutDefaults($aGroupedValues);
 
         return $aGroupedValues;
+    }
+
+    protected function filternestedExcludes($values){
+        $excludeDeep = $this->aConfiguration['excludeDeep'];
+        $moduleValues = &$values['module'];
+        foreach ($moduleValues as $moduleId => &$moduleSettings) {
+            foreach ($moduleSettings as $sVarName => &$aVarValue) {
+                if (is_array($aVarValue)) {
+                    if (isset($excludeDeep[$sVarName])) {
+                        $innerExcludes = $excludeDeep[$sVarName];
+                        if (!is_array($innerExcludes)) {
+                            $innerExcludes = [$innerExcludes];
+                        }
+
+                        foreach ($innerExcludes as $exclude) {
+                            unset ($aVarValue[$exclude]);
+                        }
+                    }
+                }
+            }
+        }
+        return $values;
     }
 
     /**
@@ -248,6 +277,9 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             $sVarName  = $aConfigValue['oxvarname'];
             $sVarType  = $aConfigValue['oxvartype'];
             $mVarValue = $aConfigValue['oxvarvalue'];
+            $sVarConstraints = $aConfigValue['oxvarconstraint'];
+            $sVarGrouping = $aConfigValue['oxgrouping'];
+            $sVarPos = $aConfigValue['oxpos'];
             $sModule   = $aConfigValue['oxmodule'];
             $aParts    = explode(':', $sModule);
             $sSection  = $aParts[0];
@@ -340,6 +372,9 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
                 if ($sSection != 'module') {
                     $mVarValue = $this->varValueWithTypeInfo($sVarName, $mVarValue, $sVarType);
                 }
+                if ($sSection == 'theme') {
+                    $mVarValue = $this->varValueWithThemeDisplayInfo($sVarName, $mVarValue, $sVarType, $sVarConstraints, $sVarGrouping, $sVarPos);
+                }
                 if ($sModule) {
                     $aGroupedValues[$sShopId][$sSection][$sModule][$sVarName] =
                         $mVarValue;
@@ -368,6 +403,10 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
             $boolPrefix = substr($sVarName, 0, 2) === "bl";
 
             if ($sVarType == 'str' && !$boolPrefix) {
+                $typeInfoNeeded = false;
+            }
+
+            if ($sVarType == 'select' && !$boolPrefix) {
                 $typeInfoNeeded = false;
             }
 
@@ -410,6 +449,20 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     }
 
     /**
+     * IM* field getter. Prepared for later when Im fields shouldn't be exported.
+     *
+     * @return string[]
+     */
+    protected function _getImFields()
+    {
+        return [
+            'IMA',
+            'IMD',
+            'IMS'
+        ];
+    }
+
+    /**
      * @param string $sFileName
      * @param array  $aData
      */
@@ -421,6 +474,27 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
         } elseif ($exportFormat == 'yaml') {
             $this->writeStringToFile($sFileName, Yaml::dump($aData, 5));
         }
+    }
+
+    /**
+     * Returns a list of server identifiers. Do not export, as it can cause out-of-envorinment variables when imported.
+     *
+     * @return string[]
+     */
+    protected function _getNodeIdentifiers()
+    {
+        $aServersKeysAsFound = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll(
+            "SELECT `OXID`, `OXVARNAME` FROM `oxconfig` WHERE `OXVARNAME` LIKE ?;",
+            ['aServersData%']
+        );
+
+        $aServersKeys = [];
+        foreach ($aServersKeysAsFound as $aServersKey)
+        {
+            $aServersKeys[] = $aServersKey['OXVARNAME'];
+        }
+
+        return array_unique($aServersKeys);
     }
 
     /**
@@ -454,8 +528,11 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
     public function getGlobalExcludedFields()
     {
         $aGlobalExcludeFields = array_merge(
+            //$this->_getImFields(),
             $this->aConfiguration['excludeFields'],
-            $this->aConfiguration['envFields']
+            $this->aConfiguration['envFields'],
+            $this->_getOllcFields(),
+            $this->_getNodeIdentifiers()
         );
 
         return $aGlobalExcludeFields;
@@ -471,6 +548,21 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
         $aReturn = $this->getConfigValues($aGlobalExcludeFields, false);
 
         return $aReturn;
+    }
+
+    /**
+     * Fields relevant for OLC. Exporting them will cause offline errors.
+     *
+     * @return string[]
+     */
+    protected function _getOllcFields()
+    {
+        return [
+            'iOlcSuccess',
+            'sClusterId',
+            'sOnlineLicenseCheckTime',
+            'sOnlineLicenseNextCheckTime'
+        ];
     }
 
     /**
@@ -500,5 +592,16 @@ class oxpsModulesConfigConfigExport extends OxpsConfigCommandBase
         $aMetaConfigFile[$this->sNameForMetaData] = $this->aDefaultConfig[$this->sNameForMetaData];
 
         $this->writeDataToFile($this->getShopsConfigFileName(), $aMetaConfigFile);
+    }
+    
+    private function varValueWithThemeDisplayInfo($sVarName, $mVarValue, $sVarType, $sVarConstraints, $sVarGrouping, $sVarPos)
+    {
+        if (!empty($sVarConstraints)||!empty($sVarPos)||!empty($sVarGrouping)) {
+            $mVarValue = array('value' => $this->varValueWithTypeInfo($sVarName, $mVarValue, $sVarType));
+            if(!empty($sVarConstraints)) { $mVarValue['constraints'] = $sVarConstraints; }
+            if(!empty($sVarGrouping)) { $mVarValue['grouping'] = $sVarGrouping; }
+            if(!empty($sVarPos)) { $mVarValue['pos'] = $sVarPos; }
+        }
+        return $mVarValue;
     }
 }

@@ -212,13 +212,11 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         oxRegistry::set('oxConfig',$oConfig);
 
 
-        $disabledModulesBeforeImport = $oConfig->getConfigParam('aDisabledModules');
+        $disabledModulesBeforeImport = array_flip($oConfig->getConfigParam('aDisabledModules'));
+        $disabledModulesBeforeImport = array_flip($disabledModulesBeforeImport);
         $modulesKnownBeforeImport = $oConfig->getConfigParam('aModuleVersions');
 
-        $this->importModuleConfig($aConfigValues);
-        $aModuleVersions = $this->restoreGeneralShopSettings($aConfigValues);
-
-        $this->importThemeConfig($aConfigValues['theme']);
+        $aModuleVersions = $this->getConfigValue($aConfigValues,'aModuleVersions');
 
         if (class_exists('oxModuleStateFixer')) {
             //since 5.2 we have the oxModuleStateFixer in the oxid console
@@ -234,10 +232,79 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         }
         $oModule->setConfig($oConfig);
 
+        $updatedModules = [];
+        $notLoadedModules = [];
+        foreach ($aModuleVersions as $sModuleId => $sVersion) {
+            $oldVersion = $modulesKnownBeforeImport[$sModuleId];
+            $newVersion = $aModuleVersions[$sModuleId];
+            if ($oldVersion != $newVersion) {
+                $updatedModules[$sModuleId] = $sModuleId;
+                if (isset($oldVersion)) {
+                    $this->oOutput->writeLn(
+                        "[INFO] {$sModuleId} has a different version ($oldVersion vs $newVersion) disabling it, so it can do updates"
+                    );
+                } else {
+                    $this->oOutput->writeLn(
+                        "[NOTE] {$sModuleId} $newVersion is new"
+                    );
+                }
+                if (!$oModule->load($sModuleId)) {
+                    //maybe fine for new modules because shop can not load them before
+                    //modules directory was scanned (by "loadModulesFromDir"-method)
+                    //later we will check if there is anything left that can still not be loaded
+                    $notLoadedModules[] = $sModuleId;
+                    continue;
+                }
+                if ($oModuleStateFixer != null) {
+                    $disabledModulesBeforeImport[$sModuleId] = 'disabledByUpdate';
+                    $oModuleStateFixer->deactivate($oModule);
+                }
+            }
+        }
+
+        $this->importModuleConfig($aConfigValues);
+
+        $modulesKnownByPath = $oConfig->getConfigParam('aModulePaths');
+
+        foreach ($notLoadedModules as $sModuleId) {
+            if (!$oModule->load($sModuleId)) {
+                $this->oOutput->writeLn(
+                    "[WARN] can not load {$sModuleId} given in yaml, please make a fresh export without that module"
+                );
+            }
+        }
+
+        $this->restoreGeneralShopSettings($aConfigValues);
+
+        $this->importThemeConfig($aConfigValues['theme']);
+
+        $aDisabledModules = $oConfig->getConfigParam('aDisabledModules');
+
+        $aModulePathsClean = $modulesKnownByPath;
+        foreach ($modulesKnownByPath as $sModuleId => $path) {
+            if (!isset($aModuleVersions[$sModuleId])) {
+                $isDisabled = array_search($sModuleId,$aDisabledModules);
+                if (!$oModule->load($sModuleId)) {
+                    unset ($aModulePathsClean[$sModuleId]);
+                    $this->oOutput->writeLn(
+                        "[WARN] {$sModuleId} it is not part of the import but, not installed physically, but somehow registered; removing it from modulePath array."
+                    );
+                    $oConfig->saveShopConfVar('aarr','aModulePaths',$aModulePathsClean);
+                }
+                if (!$isDisabled) {
+                    $this->oOutput->writeLn(
+                        "[WARN] disabling {$sModuleId} because it is not part of the import but installed on this system, please create a new export"
+                    );
+                    $aDisabledModules[] = $sModuleId;
+                }
+            }
+        }
+        $oConfig->saveShopConfVar('arr','aDisabledModules',$aDisabledModules);
+
         foreach ($aModuleVersions as $sModuleId => $sVersion) {
             if (!$oModule->load($sModuleId)) {
                 $this->oOutput->writeLn(
-                    "[ERROR] can not load {$sModuleId} given in importfile  shop{$sShopId}.yaml in aModuleVersions"
+                    "[ERROR] can not load {$sModuleId} given in importfile shop{$sShopId}.yaml in aModuleVersions please check if it is installed and working"
                 );
                 continue;
             }
@@ -245,8 +312,11 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             //execute activate event
             if ($this->aConfiguration['executeModuleActivationEvents'] && $oModule->isActive()) {
                 $wasDeactivatedBeforeImport = isset($modulesKnownBeforeImport[$sModuleId]) && isset($disabledModulesBeforeImport[$sModuleId]);
-                $wasUnkownBeforeImport = !isset($modulesKnownBeforeImport[$sModuleId]);
-                if($wasDeactivatedBeforeImport || $wasUnkownBeforeImport) {
+                $wasUnknownBeforeImport = !isset($modulesKnownBeforeImport[$sModuleId]);
+                if ($wasDeactivatedBeforeImport || $wasUnknownBeforeImport) {
+                    $this->oOutput->writeLn(
+                        "[INFO] activating module $sModuleId"
+                    );
                     if ($oModuleStateFixer != null) {
                         $oModuleStateFixer->activate($oModule);
                     } else {
@@ -276,13 +346,21 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
             $sCurrentVersion = $oModule->getInfo("version");
             if ($sCurrentVersion != $sVersion) {
                 $this->oOutput->writeLn(
-                    "[ERROR] {$sModuleId} version on export" .
-                    " $sVersion vs current version $sCurrentVersion"
+                    "[WARN] {$sModuleId} version on export" .
+                    " $sVersion vs current version $sCurrentVersion please create a fresh export"
                 );
                 $aModuleVersions[$sModuleId] = $sCurrentVersion;
                 $this->saveShopVar('aModuleVersions', $aModuleVersions, '');
             }
         }
+    }
+
+    protected function getConfigValue($aConfigValues, $name)
+    {
+        $TypeAndValue = $aConfigValues[$this->sNameForGeneralShopSettings][$name];
+        $TypeAndValue = $this->getTypeAndValue($name, $TypeAndValue);
+        $value = $TypeAndValue[1];
+        return $value;
     }
 
     /**
@@ -303,7 +381,7 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         $oxModuleList->setConfig($oConfig);
 
         $exclude = $this->aConfiguration['excludeFields'];
-        $excludeDeep = array_filter($exclude,'is_array');
+        $excludeDeep = $this->aConfiguration['excludeDeep'];
         $excludeFlat = array_flip(array_filter($exclude,'is_string'));
 
         /**
@@ -492,7 +570,13 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         foreach ($aThemes as $sThemeId => $aSettings) {
             $sSectionModule = "theme:$sThemeId";
             foreach ($aSettings as $sVarName => $mVarValue) {
-                $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
+                if(isset($mVarValue['value'])) {
+                    $this->saveShopVar($sVarName, $mVarValue['value'], $sSectionModule);
+                    $this->saveThemeDisplayVars($sVarName, $mVarValue, $sSectionModule);
+                }
+                else {
+                    $this->saveShopVar($sVarName, $mVarValue, $sSectionModule);
+                }
             }
         }
     }
@@ -534,5 +618,29 @@ class oxpsModulesConfigConfigImport extends OxpsConfigCommandBase
         }
         return $aModuleVersions;
     }
-
+    
+    protected function saveThemeDisplayVars($sVarName, $mVarValue, $sModule)
+    {
+        $oConfig = $this->oConfig;
+        
+        $oDb = oxDb::getDb();
+        $sModuleQuoted = $oDb->quote($sModule);
+        $sVarNameQuoted = $oDb->quote($sVarName);
+        $sVarConstraintsQuoted = isset($mVarValue['constraints']) ? $oDb->quote($mVarValue['constraints']) : '\'\'';
+        $sVarGroupingQuoted = isset($mVarValue['grouping']) ? $oDb->quote($mVarValue['grouping']) : '\'\'';
+        $sVarPosQuoted = isset($mVarValue['pos']) ? $oDb->quote($mVarValue['pos']) : '\'\'';
+    
+        $sNewOXIDdQuoted = $oDb->quote(oxUtilsObject::getInstance()->generateUID());
+    
+        $sQ = "delete from oxconfigdisplay WHERE OXCFGVARNAME = $sVarNameQuoted and OXCFGMODULE = $sModuleQuoted";
+        $oDb->execute($sQ);
+        
+        $sQ = "insert into oxconfigdisplay (oxid, oxcfgmodule, oxcfgvarname, oxgrouping, oxvarconstraint, oxpos )
+               values($sNewOXIDdQuoted, $sModuleQuoted, $sVarNameQuoted, $sVarGroupingQuoted, $sVarConstraintsQuoted, $sVarPosQuoted)";
+        $oDb->execute($sQ);
+    
+        $oConfig->executeDependencyEvent($sVarName);
+    
+    }
+    
 }
