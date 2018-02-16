@@ -25,7 +25,14 @@
  */
 
 namespace OxidProfessionalServices\ConfigExportImport\core;
+
+use OxidEsales\Eshop\Core\Registry;
+
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
+
 
 /**
  * Class oxpsModulesConfigConfigExport
@@ -35,13 +42,36 @@ class ConfigExport extends CommandBase
 {
 
     /**
+     * {@inheritdoc}
+     */
+    public function configure()
+    {
+        $this->setName('config:export-internal')
+            ->setDescription('Export shop config')
+            ->addOption(
+                'no-debug',
+                null,//can not use n
+                InputOption::VALUE_NONE,
+                'No debug ouput',
+                null
+            )
+            ->addOption(
+                'env',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Environment',
+                null
+            )
+            ;
+    }
+
+    /**
      * executes all functionality which is necessary for a call of OXID console config:export
      *
      */
-    public function executeConsoleCommand()
+    public function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-            $this->init();
 
             $aGlobalExcludeFields = $this->getGlobalExcludedFields();
 
@@ -97,11 +127,15 @@ class ConfigExport extends CommandBase
         
         $sSql = sprintf(
             $sSql,
-            oxRegistry::getConfig()->getDecodeValueQuery(),
+            Registry::getConfig()->getDecodeValueQuery(),
             implode("', '", $aConfigFields)
         );
 
-        $aConfigValues  = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll($sSql);
+        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
+        $resultSet = $oDb->select($sSql);
+
+        $aConfigValues = $resultSet->fetchAll();
         $aGroupedValues = $this->groupValues($aConfigValues);
         foreach ($aGroupedValues as $shopid => &$values) {
             $values = $this->filterNestedExcludes($values);
@@ -142,7 +176,11 @@ class ConfigExport extends CommandBase
      */
     protected function addShopConfig(& $aGroupedValues, $aConfigFields, $blInclude_mode)
     {
-        $aShops = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll('SELECT * FROM `oxshops` ORDER BY oxid ASC');
+        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
+        $resultSet = $oDb->select('SELECT * FROM `oxshops` ORDER BY oxid ASC');
+        $aShops = $resultSet->fetchAll();
+
         foreach ($aShops as $aShop) {
             $id = $aShop['OXID'];
             unset ($aShop['OXID']);
@@ -172,9 +210,9 @@ class ConfigExport extends CommandBase
             //TODO $blForceClean should also call force-repaire and repair module path to be sure module realy not exists
             //TODO mark already cleaned modules
             $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql");
-            oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->execute($sSql);
+            \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSql);
             $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql2");
-            oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->execute($sSql2);
+            \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSql2);
             //TODO: should also fix module version array
         } else {
             $oDebugOutput->writeLn("[ERROR] {$sModuleId} does not exist. use --force-cleanup or run $sSql; $sSql2 ");
@@ -485,10 +523,14 @@ class ConfigExport extends CommandBase
      */
     protected function _getNodeIdentifiers()
     {
-        $aServersKeysAsFound = oxDb::getDb(oxDb::FETCH_MODE_ASSOC)->getAll(
+        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
+
+        $resultSet = $oDb->select(
             "SELECT `OXID`, `OXVARNAME` FROM `oxconfig` WHERE `OXVARNAME` LIKE ?;",
             ['aServersData%']
         );
+        $aServersKeysAsFound = $resultSet->fetchAll();
 
         $aServersKeys = [];
         foreach ($aServersKeysAsFound as $aServersKey)
@@ -519,7 +561,7 @@ class ConfigExport extends CommandBase
     {
         $sMode = 'w';
         if ($sFileName && $sData) {
-            $oFile = new SplFileObject($sFileName, $sMode);
+            $oFile = new \SplFileObject($sFileName, $sMode);
             $oFile->fwrite($sData);
         }
     }

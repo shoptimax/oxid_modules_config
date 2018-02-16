@@ -1,12 +1,19 @@
 <?php
 
 namespace OxidProfessionalServices\ConfigExportImport\core;
+
+use OxidEsales\Eshop\Core\Registry;
+
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\NullOutput;
 
 /**
  *  Class OxpsConfigCommandBase:
  */
-abstract class CommandBase
+class CommandBase extends Command
 {
 
     /**
@@ -55,22 +62,12 @@ abstract class CommandBase
     protected $oDebugOutput;
 
     /**
-     * OxpsConfigCommandBase constructor.
-     *
-     * @param oxIOutput       $oOutput
-     * @param oxIConsoleInput $oInput
+     * Sets output stream, gets environment from commandline, init configuration and set debug output stream.
      */
-    public function __construct(oxIOutput $oOutput, oxIConsoleInput $oInput)
+    protected function initialize(InputInterface $oInput, OutputInterface $oOutput)
     {
         $this->oOutput = $oOutput;
         $this->oInput  = $oInput;
-    }
-
-    /**
-     * Sets output stream, gets environment from commandline, init configuration and set debug output stream.
-     */
-    protected function init()
-    {
         if ($this->oInput->hasOption('env')) {
             $this->sEnv = $this->oInput->getOption('env');
         } else {
@@ -145,8 +142,11 @@ abstract class CommandBase
             $this->aConfiguration = $this->_getModuleSettings();
         }
         $exclude = $this->aConfiguration['excludeFields'];
-        $this->aConfiguration['excludeDeep'] = array_filter($exclude,'is_array');
+        if (!is_array($exclude)) {
+            $exclude = [];
+        }
 
+        $this->aConfiguration['excludeDeep'] = array_filter($exclude, 'is_array');
         $aAllEnvConfigs       = $this->aConfiguration['env'];
         $sFilename            = $sConfigurationsDir . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
         $this->aDefaultConfig = $this->readConfigValues($sFilename, 'yaml');
@@ -165,6 +165,9 @@ abstract class CommandBase
         $sPathToModuleSettingsFile = $this->_getModuleSettingsFilePath();
         if (file_exists($sPathToModuleSettingsFile)) {
             $aModuleSettings = require $sPathToModuleSettingsFile;
+        }
+        if (!is_array($aModuleSettings)) {
+            $aModuleSettings = [];
         }
 
         return $aModuleSettings;
@@ -196,7 +199,7 @@ abstract class CommandBase
      */
     protected function _getConfigurationDirectoryPath()
     {
-        $oConfig                             = oxRegistry::getConfig();
+        $oConfig                             = Registry::getConfig();
         $sPathToThisModule                   = $oConfig->getModulesDir(
             ) . 'oxps' . DIRECTORY_SEPARATOR . 'modulesconfig' . DIRECTORY_SEPARATOR;
         $sRelativeConfigurationDirectoryPath = $oConfig->getConfigParam(
@@ -227,7 +230,7 @@ abstract class CommandBase
      */
     protected function setDebugOutput()
     {
-        $oDebugOutput       = $this->oInput->hasOption(array('n', 'no-debug')) ? oxNew('oxNullOutput') : $this->oOutput;
+        $oDebugOutput       = $this->oInput->hasOption('no-debug') ? new NullOutput() : $this->oOutput;
         $this->oDebugOutput = $oDebugOutput;
     }
 
@@ -276,6 +279,13 @@ abstract class CommandBase
     protected function readConfigValues($sFileName, $sType = null)
     {
         $this->oOutput->writeLn("Reading shop config file $sFileName");
+
+        if (!is_file($sFileName) || !is_readable($sFileName)) {
+            /** @var oxFileException $oEx */
+            $oEx = oxNew('oxFileException');
+            $oEx->setMessage("Requested file does not exist: " . $sFileName);
+            throw $oEx;
+        }
 
         if ($sType == null) {
             $sType = $this->aConfiguration['type'];

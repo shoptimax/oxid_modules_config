@@ -26,6 +26,19 @@
 
 namespace OxidProfessionalServices\ConfigExportImport\core;
 
+use OxidProfessionalServices\ConfigExportImport\core\SpecificShopConfig;
+use OxidProfessionalServices\ConfigExportImport\core\ModuleStateFixer;
+
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\EshopCommunity\Core\Exception\FileException;
+use OxidEsales\Eshop\Core\UtilsObject;
+
+use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
+
+
 /**
  * Class oxpsModulesConfigConfigImport
  * Implements functionality for the oxpsConfigImportCommand
@@ -51,14 +64,33 @@ class ConfigImport extends CommandBase
      */
     protected $storedVarTypes = [];
 
+    public function configure()
+    {
+        $this->setName('config:import-internal')
+            ->setDescription('Import shop config')
+            ->addOption(
+                'no-debug',
+                null,//can not use n
+                InputOption::VALUE_NONE,
+                'No debug ouput',
+                null
+            )
+            ->addOption(
+                'env',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Environment',
+                null
+            )
+            ;
+    }
     /*
      * executes all functionality which is necessary for a call of OXID console config:import
      *
      */
-    public function executeConsoleCommand()
+    public function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-            $this->init();
             // import environment specific config values
 
             $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
@@ -69,7 +101,7 @@ class ConfigImport extends CommandBase
             $this->getDebugOutput()->writeLn("Could not parse a YAML File.");
             $this->getDebugOutput()->writeLn($e->getMessage());
             exit(1);
-        } catch (oxFileException $oEx) {
+        } catch (FileException $oEx) {
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($oEx->getMessage());
             exit(2);
@@ -167,7 +199,7 @@ class ConfigImport extends CommandBase
         if (!$oShop->load($sShopId)) {
             $this->oOutput->writeLn("[WARN] Creating new shop $sShopId");
             $oShop->setId($sShopId);
-            $oConfig = oxSpecificShopConfig::get(1);
+            $oConfig = SpecificShopConfig::get(1);
             $oConfig->saveShopConfVar(
                 'arr',
                 'aModules',
@@ -209,9 +241,9 @@ class ConfigImport extends CommandBase
         $sShopId = $this->sShopId;
         $this->importShopsConfig($aConfigValues);
 
-        $oConfig = oxSpecificShopConfig::get($sShopId);
+        $oConfig = SpecificShopConfig::get($sShopId);
         $this->oConfig = $oConfig;
-        oxRegistry::set('oxConfig',$oConfig);
+        Registry::set('oxConfig',$oConfig);
 
 
         $disabledModulesBeforeImport = array_flip($oConfig->getConfigParam('aDisabledModules'));
@@ -220,18 +252,18 @@ class ConfigImport extends CommandBase
 
         $aModuleVersions = $this->getConfigValue($aConfigValues,'aModuleVersions');
 
-        if (class_exists('oxModuleStateFixer')) {
-            //since 5.2 we have the oxModuleStateFixer in the oxid console
-            /** @var oxModuleStateFixer $oModuleStateFixer */
-            $oModuleStateFixer = oxRegistry::get('oxModuleStateFixer');
-            $oModuleStateFixer->setConfig($oConfig);
-            /** @var oxModule $oModule */
-            $oModule = oxNew('oxModule');
-        } else {
-            //pre oxid 5.2 we have the oxStateFixerModule in the oxid console
-            /** @var oxModule $oModule */
-            $oModule = oxNew('oxStateFixerModule');
-        }
+        // if (class_exists('ModuleStateFixer')) {
+        //     //since 5.2 we have the oxModuleStateFixer in the oxid console
+        //     /** @var oxModuleStateFixer $oModuleStateFixer */
+        //     $oModuleStateFixer = Registry::get('ModuleStateFixer');
+        //     $oModuleStateFixer->setConfig($oConfig);
+        //     /** @var oxModule $oModule */
+        //     $oModule = oxNew('oxModule');
+        // } else {
+        //     //pre oxid 5.2 we have the oxStateFixerModule in the oxid console
+        //     /** @var oxModule $oModule */
+        $oModule = new ModuleStateFixer();
+            //        }
         $oModule->setConfig($oConfig);
 
         $updatedModules = [];
@@ -498,9 +530,12 @@ class ConfigImport extends CommandBase
 
     protected function getStoredVarTypes()
     {
-        $db = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
         $sQ = "select CONCAT(oxvarname,'+',oxmodule) as mapkey, oxvartype from oxconfig where oxshopid = ?";
-        $allRows = $db->getAll($sQ, [$this->sShopId]);
+        $resultSet = $oDb->select($sQ, [$this->sShopId]);
+
+        $allRows = $resultSet->fetchAll();
         $map = [];
         foreach($allRows as $row) {
             $map[$row['mapkey']] = $row['oxvartype'];
@@ -545,8 +580,7 @@ class ConfigImport extends CommandBase
         }
         if(strpos($sSectionModule,'module') === 0) {
             if($existsAlsoInGlobalNameSpace = $this->getShopConfType($sVarName,'')) {
-                $db = oxDb::getDb();
-                $db->execute("DELETE FROM oxconfig WHERE oxshopid = ? AND oxvarname = ? AND oxmodule = ''",[$this->sShopId,$sVarName]);
+                \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute("DELETE FROM oxconfig WHERE oxshopid = ? AND oxvarname = ? AND oxmodule = ''",[$this->sShopId,$sVarName]);
                 $this->oOutput->writeLn("the config value $sVarName from module $sSectionModule was delete from global namespace");
             }
         }
@@ -620,29 +654,30 @@ class ConfigImport extends CommandBase
         }
         return $aModuleVersions;
     }
-    
+
     protected function saveThemeDisplayVars($sVarName, $mVarValue, $sModule)
-    {
+    {exit();
         $oConfig = $this->oConfig;
-        
-        $oDb = oxDb::getDb();
+
+        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
         $sModuleQuoted = $oDb->quote($sModule);
         $sVarNameQuoted = $oDb->quote($sVarName);
         $sVarConstraintsQuoted = isset($mVarValue['constraints']) ? $oDb->quote($mVarValue['constraints']) : '\'\'';
         $sVarGroupingQuoted = isset($mVarValue['grouping']) ? $oDb->quote($mVarValue['grouping']) : '\'\'';
         $sVarPosQuoted = isset($mVarValue['pos']) ? $oDb->quote($mVarValue['pos']) : '\'\'';
-    
-        $sNewOXIDdQuoted = $oDb->quote(oxUtilsObject::getInstance()->generateUID());
-    
+
+        $sNewOXIDdQuoted = $oDb->quote(UtilsObject::getInstance()->generateUID());
+        $sNewOXIDdQuoted = 'toto';
+
         $sQ = "delete from oxconfigdisplay WHERE OXCFGVARNAME = $sVarNameQuoted and OXCFGMODULE = $sModuleQuoted";
         $oDb->execute($sQ);
-        
+
         $sQ = "insert into oxconfigdisplay (oxid, oxcfgmodule, oxcfgvarname, oxgrouping, oxvarconstraint, oxpos )
                values($sNewOXIDdQuoted, $sModuleQuoted, $sVarNameQuoted, $sVarGroupingQuoted, $sVarConstraintsQuoted, $sVarPosQuoted)";
         $oDb->execute($sQ);
-    
+
         $oConfig->executeDependencyEvent($sVarName);
-    
+
     }
-    
+
 }

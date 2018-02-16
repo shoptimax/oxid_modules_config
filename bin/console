@@ -1,0 +1,17 @@
+#!/usr/bin/env php
+<?php
+// application.php
+
+require __DIR__.'/../../../../bootstrap.php';
+
+use Symfony\Component\Console\Application;
+use OxidProfessionalServices\ConfigExportImport\Commands\OxpsConfigImportCommand;
+use OxidProfessionalServices\ConfigExportImport\Commands\OxpsConfigExportCommand;
+
+$application = new Application();
+
+$application->add(new OxpsConfigExportCommand());
+
+$application->add(new OxpsConfigImportCommand());
+
+$application->run();
