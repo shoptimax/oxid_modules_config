@@ -24,7 +24,7 @@
 /**
  * Class OxpsConfigImportCommandBase
  */
-class OxpsConfigImportCommand extends oxConsoleCommand
+class ImportCommand extends oxConsoleCommand
 {
 
     /**

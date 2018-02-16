@@ -30,7 +30,7 @@
  *
  * @see oxpsModulesConfigContent
  */
-class oxpsModulesConfigContentTest extends OxidTestCase
+class ContentTest extends OxidTestCase
 {
 
     /**

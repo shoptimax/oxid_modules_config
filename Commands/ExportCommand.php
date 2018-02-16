@@ -20,7 +20,7 @@
  * @copyright (C) OXID eSales AG 2003-2015
  */
 
-class OxpsConfigExportCommand extends oxConsoleCommand
+class ExportCommand extends oxConsoleCommand
 {
 
     /**
