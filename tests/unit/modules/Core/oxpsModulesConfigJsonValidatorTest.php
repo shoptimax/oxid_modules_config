@@ -23,6 +23,8 @@
  * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2014
  */
+ 
+namespace Oxps\ModulesConfig\Tests\Unit\Modules\Core;
 
 /**
  * Class oxpsModulesConfigJsonValidatorTest

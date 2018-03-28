@@ -18,16 +18,17 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  * @category      module
- * @package       modulesconfig
+ * @package       ModulesConfig
  * @author        OXID Professional services
  * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2014
  */
+ 
+namespace Oxps\ModulesConfig\Core;
 
-namespace OxidProfessionalServices\ConfigExportImport\core;
-
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use Oxps\ModulesConfig\Core\Module;
 use OxidEsales\Eshop\Core\Registry;
-
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -77,22 +78,27 @@ class ConfigExport extends CommandBase
 
             $aReturn = $this->getCommonConfigurationValues($aGlobalExcludeFields);
 
-            $aReturn = $this->addModuleOrder($aReturn);
-
+//            $aReturn = $this->addModuleOrder($aReturn);
+        
             $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
-
+//            var_dump($this->getConfigDir());
+//            var_dump("aShops:");
+//            var_dump($aShops); //  /shop1.yml
             $aReturn = $this->getEnvironmentSpecificConfigurationValues();
 
             $this->writeEnvironmentSpecificConfigurationValues($aReturn);
-
             $this->writeMetaConfigFile($aShops);
 
             $this->getDebugOutput()->writeLn("done");
+            printf("Successfully exported!"."\n\n");
+            
         } catch (RuntimeException $e) {
+//            var_dump("Runtime Exception");
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($e->getMessage());
             $this->getDebugOutput()->writeLn($e->getTraceAsString());
         } catch (oxFileException $oEx) {
+//            var_dump("oxFileException");
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($oEx->getMessage());
         }
@@ -109,12 +115,15 @@ class ConfigExport extends CommandBase
     {
         return $aReturn;
     }
-
+    
     /**
      * @param array $aConfigFields
      * @param bool  $blIncludeMode if true include the fields, else exclude them.
      *
      * @return array
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function getConfigValues($aConfigFields, $blIncludeMode)
     {
@@ -131,8 +140,8 @@ class ConfigExport extends CommandBase
             implode("', '", $aConfigFields)
         );
 
-        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-        $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb();
+        $oDb->setFetchMode(DatabaseProvider::FETCH_MODE_ASSOC);
         $resultSet = $oDb->select($sSql);
 
         $aConfigValues = $resultSet->fetchAll();
@@ -150,34 +159,50 @@ class ConfigExport extends CommandBase
     protected function filternestedExcludes($values){
         $excludeDeep = $this->aConfiguration['excludeDeep'];
         $moduleValues = &$values['module'];
-        foreach ($moduleValues as $moduleId => &$moduleSettings) {
-            foreach ($moduleSettings as $sVarName => &$aVarValue) {
-                if (is_array($aVarValue)) {
-                    if (isset($excludeDeep[$sVarName])) {
-                        $innerExcludes = $excludeDeep[$sVarName];
-                        if (!is_array($innerExcludes)) {
-                            $innerExcludes = [$innerExcludes];
+//        var_dump($moduleValues);
+    
+        if (is_array($moduleValues) || is_object($moduleValues)) {
+            foreach ($moduleValues as $moduleId => &$moduleSettings) {
+//                if (is_array($moduleSettings) || is_object($moduleSettings)) {
+                    foreach ($moduleSettings as $sVarName => &$aVarValue) {
+//                        printf("0veikia!!!!!!!!!!!!!!!!!!!!!!!!!!   PARAM:            ");
+//                        printf("sVarName:  ".$sVarName."   aVarValue:   ".$aVarValue."    ! ");
+                        if (is_array($aVarValue)) {
+//                            printf("1veikia!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            if (isset($excludeDeep[$sVarName])) {
+//                                printf("2veikia!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                                $innerExcludes = $excludeDeep[$sVarName];
+                                if (!is_array($innerExcludes)) {
+                                    $innerExcludes = [$innerExcludes];
+                                }
+                
+                                foreach ($innerExcludes as $exclude) {
+                                    unset ($aVarValue[$exclude]);
+                                }
+                            }
                         }
-
-                        foreach ($innerExcludes as $exclude) {
-                            unset ($aVarValue[$exclude]);
-                        }
+                        
                     }
-                }
+//                }
             }
         }
+//        var_dump($values);
         return $values;
     }
-
+    
     /**
      * @param $aGroupedValues
      * @param $aConfigFields
      * @param $blInclude_mode
+     *
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function addShopConfig(& $aGroupedValues, $aConfigFields, $blInclude_mode)
     {
-        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-        $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb();
+        $oDb->setFetchMode(DatabaseProvider::FETCH_MODE_ASSOC);
         $resultSet = $oDb->select('SELECT * FROM `oxshops` ORDER BY oxid ASC');
         $aShops = $resultSet->fetchAll();
 
@@ -195,9 +220,13 @@ class ConfigExport extends CommandBase
             }
         }
     }
-
+    
     /**
      * @param $sModuleId
+     *
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function handleModuleOnError($sModuleId)
     {
@@ -210,20 +239,23 @@ class ConfigExport extends CommandBase
             //TODO $blForceClean should also call force-repaire and repair module path to be sure module realy not exists
             //TODO mark already cleaned modules
             $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql");
-            \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSql);
+            DatabaseProvider::getDb()->execute($sSql);
             $oDebugOutput->writeLn("[DEBUG] Cleanup {$sModuleId}: $sSql2");
-            \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSql2);
+            DatabaseProvider::getDb()->execute($sSql2);
             //TODO: should also fix module version array
         } else {
             $oDebugOutput->writeLn("[ERROR] {$sModuleId} does not exist. use --force-cleanup or run $sSql; $sSql2 ");
             $oDebugOutput->writeLn("[ERROR] config for {$sModuleId} will not be included in export");
         }
     }
-
+    
     /**
      * @param $aGroupedValues
      *
      * @return mixed
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function withoutDefaults(&$aGroupedValues)
     {
@@ -233,8 +265,8 @@ class ConfigExport extends CommandBase
             if (isset($aShopConfig['module'])) {
                 $aModuleConfigs = &$aShopConfig['module'];
 
-                /** @var oxModule $oModule */
-                $oModule = oxNew('oxModule');
+                /** @var Module $oModule */
+                $oModule = oxNew(Module::class);
 
                 foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
 
@@ -466,19 +498,25 @@ class ConfigExport extends CommandBase
 
         return $mVarValue;
     }
-
+    
     /**
      * @param string $sDirName
      * @param array  $aData
      *
      * @return array
+     * @throws RuntimeException
      */
     protected function writeDataToFileSeperatedByShop($sDirName, $aData)
     {
         $aShops = array();
         foreach ($aData as $sShop => $aShopConfig) {
             $sFileName      = '/' . 'shop' . $sShop . '.' . $this->getFileExt();
+//            var_dump($sDirName . $sFileName);
+//            var_dump("aShopConfig:");
+//            var_dump($aShopConfig);
+            
             $aShops[$sShop] = $sFileName;
+            
             $this->writeDataToFile(
                 $sDirName . $sFileName,
                 $aShopConfig
@@ -501,10 +539,12 @@ class ConfigExport extends CommandBase
             'IMS'
         ];
     }
-
+    
     /**
      * @param string $sFileName
      * @param array  $aData
+     *
+     * @throws RuntimeException
      */
     protected function writeDataToFile($sFileName, $aData)
     {
@@ -515,15 +555,18 @@ class ConfigExport extends CommandBase
             $this->writeStringToFile($sFileName, Yaml::dump($aData, 5));
         }
     }
-
+    
     /**
      * Returns a list of server identifiers. Do not export, as it can cause out-of-envorinment variables when imported.
      *
      * @return string[]
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function _getNodeIdentifiers()
     {
-        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $oDb = DatabaseProvider::getDb();
         $oDb->setFetchMode(\OxidEsales\EshopCommunity\Core\DatabaseProvider::FETCH_MODE_ASSOC);
 
         $resultSet = $oDb->select(
@@ -540,10 +583,12 @@ class ConfigExport extends CommandBase
 
         return array_unique($aServersKeys);
     }
-
+    
     /**
      * @param string $sFileName
      * @param array  $aData
+     *
+     * @throws RuntimeException
      */
     protected function writeToJsonFile($sFileName, $aData)
     {
@@ -565,9 +610,12 @@ class ConfigExport extends CommandBase
             $oFile->fwrite($sData);
         }
     }
-
+    
     /**
      * @return array
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     public function getGlobalExcludedFields()
     {
@@ -581,16 +629,18 @@ class ConfigExport extends CommandBase
 
         return $aGlobalExcludeFields;
     }
-
+    
     /**
      * @param $aGlobalExcludeFields
      *
      * @return array
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     public function getCommonConfigurationValues($aGlobalExcludeFields)
     {
         $aReturn = $this->getConfigValues($aGlobalExcludeFields, false);
-
         return $aReturn;
     }
 
@@ -608,9 +658,12 @@ class ConfigExport extends CommandBase
             'sOnlineLicenseNextCheckTime'
         ];
     }
-
+    
     /**
      * @return array
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     public function getEnvironmentSpecificConfigurationValues()
     {
@@ -618,17 +671,21 @@ class ConfigExport extends CommandBase
 
         return $aReturn;
     }
-
+    
     /**
      * @param $aReturn
+     *
+     * @throws RuntimeException
      */
     public function writeEnvironmentSpecificConfigurationValues($aReturn)
     {
         $this->writeDataToFileSeperatedByShop($this->getEnvironmentConfigDir(), $aReturn);
     }
-
+    
     /**
      * @param $aShops
+     *
+     * @throws RuntimeException
      */
     public function writeMetaConfigFile($aShops)
     {

@@ -23,14 +23,16 @@
  * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2014
  */
+ 
+namespace Oxps\ModulesConfig\Core;
 
-namespace OxidProfessionalServices\ConfigExportImport\core;
+use OxidEsales\Eshop\Core\Base;
 
 /**
  * Class oxpsModulesConfigJsonValidator
  * Modules configuration import JSON data validation helper.
  */
-class JsonValidator extends \OxidEsales\Eshop\Core\Base
+class JsonValidator extends Base
 {
 
     /**

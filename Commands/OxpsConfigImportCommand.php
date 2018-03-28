@@ -21,10 +21,10 @@
  */
 
 
-namespace OxidProfessionalServices\ConfigExportImport\Commands;
+namespace Oxps\ModulesConfig\Commands;
 
 
-use OxidProfessionalServices\ConfigExportImport\core\ConfigImport;
+use Oxps\ModulesConfig\Core\ConfigImport;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

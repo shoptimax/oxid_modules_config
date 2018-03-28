@@ -20,6 +20,10 @@
  * @copyright (C) OXID eSales AG 2003-2015
  */
 
+namespace Oxps\ModulesConfig\Commands;
+
+use oxregistry;
+use oxutilsobject;
 
 /**
  * Class OxpsConfigImportCommandBase

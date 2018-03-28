@@ -4,7 +4,7 @@
 [{assign var="aErrors" value=$oView->getErrors()}]
 [{assign var="aMessages" value=$oView->getMessages()}]
 [{include file="headitem.tpl" title="OXPS_MODULESCONFIG_DASHBOARD"|oxmultilangassign}]
-[{oxstyle include=$oViewConf->getModuleUrl('oxps/modulesconfig', 'out/src/css/admin_oxpsmodulesconfig.css')}]
+[{oxstyle include=$oViewConf->getModuleUrl('oxps/ModulesConfig', 'out/src/css/admin_oxpsmodulesconfig.css')}]
 [{oxstyle}]
 [{oxscript add="function selectAllModules(blIsSelected) {
         var oModulesSelect = document.getElementById('oxpsmodulesconfig_modules');

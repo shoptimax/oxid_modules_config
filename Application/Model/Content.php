@@ -24,13 +24,17 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
-namespace OxidProfessionalServices\ConfigExportImport\Model;
+namespace Oxps\ModulesConfig\Application\Model;
+
+use OxidEsales\Eshop\Core\Base;
+use oxmodulelist;
+use oxstr;
 
 /**
  * Class oxpsModulesConfigContent
  * Module configuration import and export content handler defines what data is used in the processes.
  */
-class Content extends \OxidEsales\EshopEnterprise\Core\Base
+class Content extends Base
 {
 
     /**
@@ -57,7 +61,7 @@ class Content extends \OxidEsales\EshopEnterprise\Core\Base
     public function getModulesList()
     {
         /** @var oxModuleList $oModuleList */
-        $ModuleList = oxNew(\OxidEsales\Eshop\Core\Module\ModuleList);
+        $ModuleList = oxNew(oxmodulelist::class);
 
         // Get all modules data
         $AllModules = $ModuleList->getModulesFromDir($this->getConfig()->getModulesDir());

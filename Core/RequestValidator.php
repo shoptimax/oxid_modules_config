@@ -23,14 +23,18 @@
  * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2014
  */
+ 
+namespace Oxps\ModulesConfig\Core;
 
-namespace OxidProfessionalServices\ConfigExportImport\core;
+use OxidEsales\Eshop\Core\Base;
+use Oxps\ModulesConfig\Application\Model\Content;
+use oxregistry;
 
 /**
  * Class oxpsModulesConfigRequestValidator
  * Modules configuration data validation and error handler.
  */
-class RequestValidator extends \OxidEsales\Eshop\Core\Base
+class RequestValidator extends Base
 {
 
     /**
@@ -149,8 +153,8 @@ class RequestValidator extends \OxidEsales\Eshop\Core\Base
      */
     protected function _checkIfModulesAreAvailable(array $aModules)
     {
-        /** @var oxpsModulesConfigContent $oContent */
-        $oContent = oxRegistry::get('oxpsModulesConfigContent');
+        /** @var Content $oContent */
+        $oContent = oxRegistry::get(Content::class);
         $aValidModules = $oContent->getModulesList();
 
         foreach ($aModules as $sModule) {
@@ -184,8 +188,8 @@ class RequestValidator extends \OxidEsales\Eshop\Core\Base
      */
     protected function _checkIfSettingsAreAvailable(array $aSettings)
     {
-        /** @var oxpsModulesConfigContent $oContent */
-        $oContent = oxRegistry::get('oxpsModulesConfigContent');
+        /** @var Content $oContent */
+        $oContent = oxRegistry::get(Content::class);
         $aValidSettings = $oContent->getSettingsList();
 
         foreach ($aSettings as $sSettings) {
@@ -297,8 +301,8 @@ class RequestValidator extends \OxidEsales\Eshop\Core\Base
     {
         if (!$this->getErrors()) {
 
-            /** @var oxpsModulesConfigTransfer $oModulesConfig */
-            $oModulesConfig = oxNew('oxpsModulesConfigTransfer');
+            /** @var Transfer $oModulesConfig */
+            $oModulesConfig = oxNew(Transfer::class);
             $oModulesConfig->setImportDataFromFile($aFileData);
 
             $this->addErrors((array) $oModulesConfig->getImportDataValidationErrors());

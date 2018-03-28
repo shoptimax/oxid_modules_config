@@ -8,14 +8,13 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
-namespace OxidProfessionalServices\ConfigExportImport\core;
-
-
+ 
+namespace Oxps\ModulesConfig\Core;
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Module\ModuleCache;
 use OxidEsales\Eshop\Core\Module\ModuleInstaller;
 use OxidEsales\Eshop\Core\Module\Module;
 use OxidEsales\Eshop\Core\Config;
-
 use Symfony\Component\Console\Output\OutputInterface;
 
 
@@ -33,8 +32,8 @@ class ModuleStateFixer extends ModuleInstaller
      * Fix module states task runs version, extend, files, templates, blocks,
      * settings and events information fix tasks
      *
-     * @param oxModule $oModule
-     * @param oxConfig|null $oConfig If not passed uses default base shop config
+     * @param Module $oModule
+     * @param Config|null $oConfig If not passed uses default base shop config
      */
     public function fix(Module $oModule, Config $oConfig = null)
     {
@@ -58,7 +57,7 @@ class ModuleStateFixer extends ModuleInstaller
         $this->_addModuleVersion($oModule->getInfo("version"), $sModuleId);
         $this->_addModuleEvents($oModule->getInfo("events"), $sModuleId);
 
-        /** @var oxModuleCache $oModuleCache */
+        /** @var ModuleCache $oModuleCache */
         $oModuleCache = oxNew('oxModuleCache', $oModule);
         $oModuleCache->resetCache();
     }
@@ -142,16 +141,21 @@ class ModuleStateFixer extends ModuleInstaller
     {
         $this->setTemplateBlocks($moduleBlocks, $moduleId);
     }
-
+    
     /**
      * Set module templates in the database.
      * we do not use delete and add combination because
      * the combination of deleting and adding does unnessery writes and so it does not scale
      * also it's more likely to get race conditions (in the moment the blocks are deleted)
+     *
      * @todo extract oxtplblocks query to ModuleTemplateBlockRepository
      *
      * @param array  $moduleBlocks Module blocks array
      * @param string $moduleId     Module id
+     *
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function setTemplateBlocks($moduleBlocks, $moduleId)
     {
@@ -159,7 +163,7 @@ class ModuleStateFixer extends ModuleInstaller
             $moduleBlocks = array();
         }
         $shopId = $this->getConfig()->getShopId();
-        $db = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $db = DatabaseProvider::getDb();
         $knownBlocks = ['dummy']; // Start with a dummy value to prevent having an empty list in the NOT IN statement.
 
         foreach ($moduleBlocks as $moduleBlock) {

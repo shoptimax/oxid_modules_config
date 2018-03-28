@@ -5,13 +5,17 @@
 require __DIR__.'/../../../../bootstrap.php';
 
 use Symfony\Component\Console\Application;
-use OxidProfessionalServices\ConfigExportImport\Commands\OxpsConfigImportCommand;
-use OxidProfessionalServices\ConfigExportImport\Commands\OxpsConfigExportCommand;
+use Oxps\ModulesConfig\Commands\OxpsConfigImportCommand;
+use Oxps\ModulesConfig\Commands\OxpsConfigExportCommand;
 
 $application = new Application();
 
 $application->add(new OxpsConfigExportCommand());
 
 $application->add(new OxpsConfigImportCommand());
-
-$application->run();
+    
+    /** @var Application $application */
+    try {
+        $application->run();
+    } catch (Exception $e) {
+    }

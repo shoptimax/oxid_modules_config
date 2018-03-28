@@ -46,19 +46,10 @@ $aModule = [
     'email'       => 'info@oxid-esales.com',
     'extend'      => [],
     'controllers' => [
-        'admin_oxpsmodulesconfigdashboard'  => OxidProfessionalServices\ConfigExportImport\Controller\Admin\Dashboard::class,
-        'oxpsmodulesconfigjsonvalidator'    => OxidProfessionalServices\ConfigExportImport\core\JsonValidator::class,
-        'oxpsmodulesconfigmodule'           => OxidProfessionalServices\ConfigExportImport\core\Module::class,
-        'oxpsmodulesconfigrequestvalidator' => OxidProfessionalServices\ConfigExportImport\core\RequestValidator::class,
-        'oxpsmodulesconfigtransfer'         => OxidProfessionalServices\ConfigExportImport\core\Transfer::class,
-        'oxpsconfigcommandbase'             => OxidProfessionalServices\ConfigExportImport\core\CommandBase::class,
-        'oxpsmodulesconfigconfigexport'     => OxidProfessionalServices\ConfigExportImport\core\ConfigExport::class,
-        'oxpsmodulesconfigconfigimport'     => OxidProfessionalServices\ConfigExportImport\core\ConfigImport::class,
-        'oxpsmodulesconfigcontent'          => OxidProfessionalServices\ConfigExportImport\Model\Content::class,
-        'oxpsmodulesconfigstorage'          => OxidProfessionalServices\ConfigExportImport\Model\Storage::class,
+        'admin_oxpsmodulesconfigdashboard'  => Oxps\ModulesConfig\Application\Controller\Admin\Dashboard::class,
     ],
     'templates'   => [
-        'admin_oxpsmodulesconfigdashboard.tpl' => 'oxps/modulesconfig/views/admin/admin_oxpsmodulesconfigdashboard.tpl',
+        'admin_oxpsmodulesconfigdashboard.tpl' => 'oxps/ModulesConfig/Application/views/admin/admin_oxpsmodulesconfigdashboard.tpl',
     ],
     'events'      => [
         'onActivate'   => 'oxpsModulesConfigModule::onActivate',

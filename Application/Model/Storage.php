@@ -24,13 +24,18 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
-namespace OxidProfessionalServices\ConfigExportImport\Model;
+namespace Oxps\ModulesConfig\Application\Model;
+
+use oxdb;
+use OxidEsales\Eshop\Core\Config;
+use oxregistry;
+use oxutilsobject;
 
 /**
  * Class oxpsModulesConfigStorage
  * A model for modules related configuration loading and saving methods.
  */
-class Storage extends \OxidEsales\Eshop\Core\Config
+class Storage extends Config
 {
 
     /**
@@ -194,7 +199,7 @@ class Storage extends \OxidEsales\Eshop\Core\Config
     {
         return (array) $this->getShopConfVar($sSettingKey);
     }
-
+    
     /**
      * Load modules settings array from shop configuration.
      *
@@ -204,12 +209,15 @@ class Storage extends \OxidEsales\Eshop\Core\Config
      * @param string $sSettingKey
      *
      * @return array
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function _loadListFromShopConfig($sModuleId, $sSettingKey)
     {
         $oDb = oxDb::getDb(oxdb::FETCH_MODE_ASSOC);
 
-        return (array) $oDb->getArray(
+        return (array) $oDb->select(
             sprintf(
                 "SELECT `OXVARNAME`, `OXVARTYPE`, %s AS `OXVARVALUE` FROM `oxconfig` " .
                 "WHERE `OXSHOPID` = %s AND `OXMODULE` = %s",
@@ -219,7 +227,7 @@ class Storage extends \OxidEsales\Eshop\Core\Config
             )
         );
     }
-
+    
     /**
      * Load modules blocks settings array from database blocks table.
      *
@@ -229,12 +237,15 @@ class Storage extends \OxidEsales\Eshop\Core\Config
      * @param string $sSettingKey
      *
      * @return array
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
     protected function _loadFromBlocksTable($sModuleId, $sSettingKey)
     {
         $oDb = oxDb::getDb(oxdb::FETCH_MODE_ASSOC);
 
-        return (array) $oDb->getArray(
+        return (array) $oDb->select(
             sprintf(
                 "SELECT `OXACTIVE`, `OXTEMPLATE`, `OXBLOCKNAME`, `OXPOS`, `OXFILE` FROM `oxtplblocks` " .
                 "WHERE `OXSHOPID` = %s AND `OXMODULE` = %s",
@@ -278,7 +289,7 @@ class Storage extends \OxidEsales\Eshop\Core\Config
     {
         $this->saveShopConfVar('arr', $sSettingKey, $aSettings);
     }
-
+    
     /**
      * Update module settings in database with a settings import data.
      *
@@ -286,6 +297,10 @@ class Storage extends \OxidEsales\Eshop\Core\Config
      *
      * @param string $sModuleId
      * @param array  $aSettings
+     *
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function _saveModuleSettings($sModuleId, array $aSettings)
     {
@@ -315,7 +330,7 @@ class Storage extends \OxidEsales\Eshop\Core\Config
             );
         }
     }
-
+    
     /**
      * Update module blocks configuration in database with a block import data.
      *
@@ -323,11 +338,15 @@ class Storage extends \OxidEsales\Eshop\Core\Config
      *
      * @param string $sModuleId
      * @param array  $aBlocks
+     *
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     protected function _saveModuleBlocks($sModuleId, array $aBlocks)
     {
         /** @var oxUtilsObject $oObjectUtils */
-        $oObjectUtils = oxRegistry::get('oxUtilsObject');
+        $oObjectUtils = oxRegistry::get(oxutilsobject::class);
 
         $oDb = oxDb::getDb();
 

@@ -21,10 +21,10 @@
  */
 
 
-namespace OxidProfessionalServices\ConfigExportImport\Commands;
+namespace Oxps\ModulesConfig\Commands;
 
 
-use OxidProfessionalServices\ConfigExportImport\core\ConfigExport;
+use Oxps\ModulesConfig\Core\ConfigExport;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -62,17 +62,20 @@ class OxpsConfigExportCommand extends Command
             )
             ;
     }
-
+    
     /**
      * Execute current command
      *
-     * @param InputInterface $input OutputInterface $output
+     * @param InputInterface  $input OutputInterface $output
+     * @param OutputInterface $output
+     *
+     * @throws \Oxps\ModulesConfig\Core\Exception
+     * @throws \oxfileexception
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $oConfigExport = new ConfigExport();
         $oConfigExport->initialize($input, $output);
-
         $oConfigExport->execute($input, $output);
     }
 

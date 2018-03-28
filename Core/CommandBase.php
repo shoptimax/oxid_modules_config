@@ -1,7 +1,8 @@
 <?php
 
-namespace OxidProfessionalServices\ConfigExportImport\core;
+namespace Oxps\ModulesConfig\Core;
 
+use oxfileexception;
 use OxidEsales\Eshop\Core\Registry;
 
 use Symfony\Component\Yaml\Yaml;
@@ -22,7 +23,7 @@ class CommandBase extends Command
     protected $sEnv = null;
 
     /**
-     * @var oxIOutput $oOutput The output stream, where to write the configuration.
+     * @var OxIOutput $oOutput The output stream, where to write the configuration.
      */
     protected $oOutput;
 
@@ -60,9 +61,15 @@ class CommandBase extends Command
      * @var oxIOutput
      */
     protected $oDebugOutput;
-
+    
     /**
      * Sets output stream, gets environment from commandline, init configuration and set debug output stream.
+     *
+     * @param InputInterface  $oInput
+     * @param OutputInterface $oOutput
+     *
+     * @throws Exception
+     * @throws oxfileexception
      */
     protected function initialize(InputInterface $oInput, OutputInterface $oOutput)
     {
@@ -76,6 +83,8 @@ class CommandBase extends Command
         $this->setDebugOutput();
         $this->initConfiguration();
         $aConfigIntersect = array_intersect($this->aConfiguration['excludeFields'], $this->aConfiguration['envFields']);
+//        var_dump("aConfigIntersect");
+//        var_dump($aConfigIntersect);
         if (count($aConfigIntersect) > 0) {
             $this->getDebugOutput()->writeLn(
                 "CAUTION: excludeFields and envFields are not disjoint! " . var_dump($aConfigIntersect)
@@ -125,15 +134,15 @@ class CommandBase extends Command
     {
         return $this->aConfiguration['dir'] . '/shops.' . $this->getFileExt();
     }
-
+    
     /**
      * Init configuration from file
      *
      * It is been done only once. It will be stored as object property
      * after first call and will return it.
      *
-     * @throws oxFileException
-     *
+     * @throws Exception
+     * @throws oxfileexception
      */
     protected function initConfiguration()
     {
@@ -150,14 +159,20 @@ class CommandBase extends Command
         $aAllEnvConfigs       = $this->aConfiguration['env'];
         $sFilename            = $sConfigurationsDir . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
         $this->aDefaultConfig = $this->readConfigValues($sFilename, 'yaml');
+//        var_dump("DefaultConfig:");
+//        var_dump($this->aDefaultConfig);
         $aEnvConfig           = $aAllEnvConfigs[$this->sEnv];
         $this->aEnvConfig     = $aEnvConfig;
+    
+//        var_dump("aEnvConfig:");
+//        var_dump($aEnvConfig);
     }
-
+    
     /**
      * @todo: is it necessary to activate the module to make the path settings?
      *
      * @return array
+     * @throws oxfileexception
      */
     protected function _getModuleSettings()
     {
@@ -184,7 +199,7 @@ class CommandBase extends Command
         $sModuleSettingsFilePath     = $sConfigurationDirectoryPath . 'oxpsconfigmodulesettings.php';
         if (!is_file($sModuleSettingsFilePath) || !is_readable($sModuleSettingsFilePath)) {
             /** @var oxFileException $oEx */
-            $oEx = oxNew('oxFileException');
+            $oEx = oxNew(oxfileexception::class);
             $oEx->setMessage("Requested file does not exist: " . $sModuleSettingsFilePath);
             throw $oEx;
         }
@@ -201,7 +216,7 @@ class CommandBase extends Command
     {
         $oConfig                             = Registry::getConfig();
         $sPathToThisModule                   = $oConfig->getModulesDir(
-            ) . 'oxps' . DIRECTORY_SEPARATOR . 'modulesconfig' . DIRECTORY_SEPARATOR;
+            ) . 'oxps' . DIRECTORY_SEPARATOR . 'ModulesConfig' . DIRECTORY_SEPARATOR;
         $sRelativeConfigurationDirectoryPath = $oConfig->getConfigParam(
             'OXPS_MODULESCONFIG_SETTING_CONFIGURATION_DIRECTORY'
         );
@@ -217,7 +232,7 @@ class CommandBase extends Command
         $sPathToModuleSettingsFile = $sPathToThisModule . $sRelativeConfigurationDirectoryPath . DIRECTORY_SEPARATOR;
         if (!is_dir($sPathToModuleSettingsFile)) {
             /** @var oxFileException $oEx */
-            $oEx = oxNew("oxFileException");
+            $oEx = oxNew(oxfileexception::class);
             $oEx->setMessage("Requested directory does not exist: " . $sPathToModuleSettingsFile);
             throw $oEx;
         }
@@ -263,7 +278,7 @@ class CommandBase extends Command
     {
         return $this->aConfiguration['type'];
     }
-
+    
     /**
      * Read configuration from file
      * It is being done only once. It will be stored as object property
@@ -271,10 +286,8 @@ class CommandBase extends Command
      * @param string $sFileName Name/path to the config file, that configure this config ex/importer
      * @param null   $sType
      *
-     * @throws Exception
-     * @throws \Symfony\Component\Yaml\Exception\ParseException
-     *
      * @return array|mixed
+     * @throws oxfileexception
      */
     protected function readConfigValues($sFileName, $sType = null)
     {

@@ -23,8 +23,10 @@
  * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2014
  */
+ 
+namespace Oxps\ModulesConfig\Core;
 
-namespace OxidProfessionalServices\ConfigExportImport\core;
+use oxregistry;
 
 /**
  * Class oxpsModulesConfigModule

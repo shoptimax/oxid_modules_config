@@ -8,9 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+ 
+namespace Oxps\ModulesConfig\Core;
 
-namespace OxidProfessionalServices\ConfigExportImport\core;
-
+use oxconnectionexception;
+use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\EshopCommunity\Core\Config;
 use OxidEsales\Eshop\Core\Registry;
 
@@ -37,15 +39,18 @@ class SpecificShopConfig extends Config
         $this->_iShopId = $iShopId;
         $this->init();
     }
-
+    
     /**
      * Returns config arrays for all shops
      *
      * @return SpecificShopConfig[]
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     public static function getAll()
     {
-        $Ashopids = \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getCol('SELECT oxid FROM oxshops');
+        $aShopIds = DatabaseProvider::getDb()->getCol('SELECT oxid FROM oxshops');
         $aConfigs = array();
 
         foreach ($aShopIds as $mShopId) {
@@ -55,18 +60,20 @@ class SpecificShopConfig extends Config
 
         return $aConfigs;
     }
-
+    
     /**
      * Get config object of given shop id
      *
      * @param string|integer $mShopId
      *
      * @return SpecificShopConfig|null
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     public static function get($mShopId)
     {
         $sSQL = 'SELECT 1 FROM oxshops WHERE oxid = %s';
-        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $oDb = DatabaseProvider::getDb();
 
         if (!$oDb->getOne(sprintf($sSQL, $oDb->quote($mShopId)))) { // invalid shop id
             // Not using oxConfig::_isValidShopId() because its not static, but YES it should be
@@ -102,7 +109,7 @@ class SpecificShopConfig extends Config
             // loading shop config
             if (empty($sShopID) || !$blConfigLoaded) {
                 /** @var oxConnectionException $oEx */
-                $oEx = oxNew("oxConnectionException");
+                $oEx = oxNew(oxconnectionexception::class);
                 $oEx->setMessage("Unable to load shop config values from database");
                 throw $oEx;
             }

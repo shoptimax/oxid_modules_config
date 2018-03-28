@@ -19,7 +19,10 @@
  * @link          http://www.oxid-esales.com
  * @copyright (C) OXID eSales AG 2003-2015
  */
-
+ 
+/**
+ * Class ExportCommand
+ */
 class ExportCommand extends oxConsoleCommand
 {
 

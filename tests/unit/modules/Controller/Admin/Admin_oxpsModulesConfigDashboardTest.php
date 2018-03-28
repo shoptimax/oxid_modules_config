@@ -24,6 +24,8 @@
  * @copyright (C) OXID eSales AG 2003-2014
  */
 
+namespace Oxps\ModulesConfig\Tests\Unit\Modules\Controller\Admin;
+
 /**
  * Class Admin_oxpsModulesConfigDashboardTest
  * Tests for admin controller Admin_oxpsModulesConfigDashboard.
