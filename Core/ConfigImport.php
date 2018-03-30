@@ -37,6 +37,7 @@ use OxidEsales\Eshop\Core\Module\ModuleList;
 use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\EshopCommunity\Core\Exception\FileException;
 use OxidEsales\Eshop\Core\UtilsObject;
+use oxmodulelist;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -104,9 +105,10 @@ class ConfigImport extends CommandBase
     {
         try {
             // import environment specific config values
-
             $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
             $aShops = $aMetaConfig['shops'];
+//            var_dump($aShops);
+            
             $this->runShopConfigImportForAllShops($aShops);
             printf("Import successfully finished!\n");
         } catch (ParseException $e) {
@@ -135,9 +137,7 @@ class ConfigImport extends CommandBase
 
         $sFileName = $this->getConfigDir() . $sRelativeFileName;
         $aResult = $this->readConfigValues($sFileName);
-
         $aResult = $this->merge_config($this->aDefaultConfig, $aResult);
-
         if ($this->sEnv) {
             $sEnvDirName = $this->getEnvironmentConfigDir();
             $sFileName = $sEnvDirName . $sRelativeFileName;
@@ -146,8 +146,9 @@ class ConfigImport extends CommandBase
         }
         
         printf("Importing config for shop ".$sShop."\n");
-
+        var_dump("iseina");
         $this->importConfigValues($aResult);
+        var_dump("grizta?");
     }
     
     /**
@@ -243,6 +244,8 @@ class ConfigImport extends CommandBase
      *
      * @throws \Exception
      * @throws StandardException
+     *
+     * TODO: REFACTOR THIS METHOD, ADD MORE COMMENTS
      */
     protected function importConfigValues($aConfigValues)
     {
@@ -384,7 +387,25 @@ class ConfigImport extends CommandBase
     }
     
     /**
-     * Restore module defaults and import modul config
+     * @param $oModule
+     * @param $aModuleExtensions
+     *
+     * @return
+     */
+    protected function collectNamespaces($oModule, $aModuleExtensions){
+        $aAddModules = $oModule->getExtensions();
+        
+        foreach ($aAddModules as $key => $ext) {
+            if(!isset($aModuleExtensions[$key])) {
+                $aModuleExtensions[$key][] = $ext;
+            }
+        }
+        
+        return $aModuleExtensions;
+    }
+    
+    /**
+     * Restore module defaults and import module config
      * This will scan the module directory and add all modules (module paths).
      * This must be done before aDisabledModules is restored because this function deactivates modules.
      *
@@ -398,13 +419,12 @@ class ConfigImport extends CommandBase
         $allModulesConfigFromYaml = $aConfigValues['module'];
 
         $oConfig = $this->oConfig;
-        $oxModuleList = oxNew('oxModuleList');
+        $oxModuleList = oxNew(oxModuleList::class);
         $oxModuleList->setConfig($oConfig);
 
         $exclude = $this->aConfiguration['excludeFields'];
         $excludeDeep = $this->aConfiguration['excludeDeep'];
         $excludeFlat = array_flip(array_filter($exclude,'is_string'));
-
         /**
          * @var ModuleList $oxModuleList
          * //it is important to call this method to load new module into the shop
@@ -414,13 +434,9 @@ class ConfigImport extends CommandBase
         $aGeneralSettings = &$aConfigValues[$this->sNameForGeneralShopSettings];
         $aModuleExtensions = &$aGeneralSettings['aModules'];
         foreach ($aModules as $sModuleId => $oModule) {
+            
             if ($oModule->hasExtendClass()) {
-                $aAddModules = $oModule->getExtensions();
-                foreach ($aAddModules as $key => $ext) {
-                    if(!isset($aModuleExtensions[$key])) {
-                        $aModuleExtensions[$key][] = $ext;
-                    }
-                }
+                $aModuleExtensions = $this->collectNamespaces($oModule, $aModuleExtensions);
             }
 
             // restore default module settings
@@ -437,7 +453,7 @@ class ConfigImport extends CommandBase
                 $aDefaultModuleSettings[$aSetting['name']] = $aSetting;
             }
             $aModuleOverride = is_null($allModulesConfigFromYaml[$sModuleId]) ? array() : $allModulesConfigFromYaml[$sModuleId];
-
+//            var_dump($aModuleOverride);
             // merge from aModulesOverwrite into aDefaultModuleSettings
             $aMergedModuleSettings = array();
             foreach ($aDefaultModuleSettings as $sName => $aDefaultModuleSetting) {
@@ -448,11 +464,10 @@ class ConfigImport extends CommandBase
                 }
                 $aMergedModuleSettings[$sName] = $aDefaultModuleSetting;
             }
-
+            
             foreach ($aModuleOverride as $sName => $mValue) {
                 $aMergedModuleSettings[$sName] = array('value' => $mValue, 'type' => null);
             }
-
             // Save all that is not part of $this->aConfiguration['excludeFields'])
             foreach ($aMergedModuleSettings as $sVarName => $aVarValue) {
                 // We do not want to override with default values of fields which
@@ -549,6 +564,7 @@ class ConfigImport extends CommandBase
      */
     protected function saveShopVar($sVarName, $mVarValue, $sSectionModule, $sVarType = null)
     {
+        
         $sShopId = $this->sShopId;
         $oConfig = $this->oConfig;
 
@@ -628,6 +644,7 @@ class ConfigImport extends CommandBase
     protected function runShopConfigImportForAllShops($aShops)
     {
         foreach ($aShops as $sShop => $sFileName) {
+//            var_dump($sShop);
             $this->sShopId = $sShop;
             $this->storedVarTypes = $this->getStoredVarTypes();
             $this->runShopConfigImportForOneShop($sShop, $sFileName);

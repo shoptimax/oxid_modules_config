@@ -86,9 +86,6 @@ class CommandBase extends Command
 
         if (count($aConfigIntersect) > 0) {
             printf("CAUTION: excludeFields and envFields are not disjoint!" . var_dump($aConfigIntersect)."\n");
-//            $this->getDebugOutput()->writeLn(
-//                "CAUTION: excludeFields and envFields are not disjoint! " . var_dump($aConfigIntersect)
-//            );
         }
     }
 
@@ -286,12 +283,12 @@ class CommandBase extends Command
      */
     protected function readConfigValues($sFileName, $sType = null)
     {
-        $this->oOutput->writeLn("Reading shop config file $sFileName");
+        printf("Reading shop config file ".$sFileName."\n");
 
         if (!is_file($sFileName) || !is_readable($sFileName)) {
             /** @var oxFileException $oEx */
-            $oEx = oxNew('oxFileException');
-            $oEx->setMessage("Requested file does not exist: " . $sFileName);
+            $oEx = oxNew(oxfileexception::class);
+            printf("Requested file does not exist: " . $sFileName);
             throw $oEx;
         }
 
