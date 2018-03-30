@@ -17,13 +17,25 @@
  *
  * @author        OXID Professional services
  * @link          http://www.oxid-esales.com
- * @copyright (C) OXID eSales AG 2003-2015
+ * @copyright (C) OXID eSales AG 2003-2018
  */
- 
+
+
+namespace Oxps\ModulesConfig\Commands;
+
+
+use Oxps\ModulesConfig\Core\ConfigExport;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
+
+
 /**
  * Class ExportCommand
  */
-class ExportCommand extends oxConsoleCommand
+class ExportCommand extends Command
 {
 
     /**
@@ -31,35 +43,40 @@ class ExportCommand extends oxConsoleCommand
      */
     public function configure()
     {
-        $this->setName('config:export');
-        $this->setDescription('Export shop config');
+        $this->setName('config:export')
+            ->setDescription('Export shop config')
+            // if you want to add more option here, copy them in ConfigExport class
+            ->addOption(
+                'no-debug',
+                null,//can not use n
+                InputOption::VALUE_NONE,
+                'No debug ouput',
+                null
+            )
+            ->addOption(
+                'env',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Environment',
+                null
+            )
+            ;
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function help(oxIOutput $oOutput)
-    {
-        $oOutput->writeLn('Usage: config:export [options]');
-        $oOutput->writeLn();
-        $oOutput->writeLn('This command export shop config');
-        $oOutput->writeLn();
-        $oOutput->writeLn('Available options:');
-        $oOutput->writeLn('  -n, --no-debug     No debug output');
-        $oOutput->writeLn('  --env=ENVIRONMENT  Environment');
-        //TODO: $oOutput->writeLn('  --shop=SHOPID      Shop');
-    }
-
+    
     /**
      * Execute current command
      *
-     * @param oxIOutput $oOutput
+     * @param InputInterface  $input OutputInterface $output
+     * @param OutputInterface $output
+     *
+     * @throws \Oxps\ModulesConfig\Core\Exception
+     * @throws \oxfileexception
      */
-    public function execute(oxIOutput $oOutput)
+    public function execute(InputInterface $input, OutputInterface $output)
     {
-        $oInput        = $this->getInput();
-        $oConfigExport = oxNew('oxpsModulesConfigConfigExport', $oOutput, $oInput);
-        $oConfigExport->executeConsoleCommand();
+        $oConfigExport = new ConfigExport();
+        $oConfigExport->initialize($input, $output);
+        $oConfigExport->execute($input, $output);
     }
 
 }

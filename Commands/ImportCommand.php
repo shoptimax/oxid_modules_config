@@ -17,18 +17,22 @@
  *
  * @author        OXID Professional services
  * @link          http://www.oxid-esales.com
- * @copyright (C) OXID eSales AG 2003-2015
+ * @copyright (C) OXID eSales AG 2003-2018
  */
 
 namespace Oxps\ModulesConfig\Commands;
 
-use oxregistry;
-use oxutilsobject;
+use Oxps\ModulesConfig\Core\ConfigImport;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
+
 
 /**
- * Class OxpsConfigImportCommandBase
+ * Class ImportCommand
  */
-class ImportCommand extends oxConsoleCommand
+class ImportCommand extends Command
 {
 
     /**
@@ -36,49 +40,40 @@ class ImportCommand extends oxConsoleCommand
      */
     public function configure()
     {
-        $this->setName('config:import');
-        $this->setDescription('Import shop config');
-    }
+        $this->setName('config:import')
+            ->setDescription('Import shop config')
+                    ->addOption(
+                'no-debug',
+                null,//can not use n
+                InputOption::VALUE_NONE,
+                'No debug ouput',
+                null
+            )
+            ->addOption(
+                'env',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Environment',
+                null
+            )
+            ;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function help(oxIOutput $oOutput)
-    {
-        $oOutput->writeLn('Usage: config:import [options]');
-        $oOutput->writeLn();
-        $oOutput->writeLn('This command imports shop config');
-        $oOutput->writeLn();
-        $oOutput->writeLn('Available options:');
-        $oOutput->writeLn('  -n, --no-debug     No debug output');
-        $oOutput->writeLn('  --env=ENVIRONMENT  Environment');
-        //TODO: $oOutput->writeLn('  --shop=SHOPID      Shop');
     }
-
+    
     /**
      * Execute current command
      *
-     * @param oxIOutput $oOutput
+     * @param InputInterface  $input OutputInterface $output
+     * @param OutputInterface $output
+     *
+     * @throws \oxfileexception
      */
-    public function execute(oxIOutput $oOutput)
+    public function execute(InputInterface $input, OutputInterface $output)
     {
-        $oInput        = $this->getInput();
-        if (!class_exists('oxpsModulesConfigConfigImport')) {
-            $oOutput->writeLn('Config importer is not active trying to activate...');
-            $oModuleInstaller = oxRegistry::get('oxModuleInstaller');
-            $oxModuleList = oxNew('oxModuleList');
-            $oxModuleList->getModulesFromDir(oxRegistry::getConfig()->getModulesDir());
-            $aModules = $oxModuleList->getList();
-            /** @var oxModule $oModule */
-            $oModule = $aModules['oxpsmodulesconfig'];
-            $oModuleInstaller->activate($oModule);
+        $oConfigImport = new ConfigImport();
+        $oConfigImport->initialize($input, $output);
 
-            //workaround for issue in oxid see https://github.com/OXID-eSales/oxideshop_ce/pull/413
-            $utilsObject = oxUtilsObject::getInstance();
-            $utilsObject->setModuleVar('aModuleFiles',null);
-        }
-        $oConfigExport = oxNew('oxpsModulesConfigConfigImport', $oOutput, $oInput);
-        $oConfigExport->executeConsoleCommand();
+        $oConfigImport->execute($input, $output);
     }
 
 }

@@ -10,9 +10,9 @@ use Oxps\ModulesConfig\Commands\OxpsConfigExportCommand;
 
 $application = new Application();
 
-$application->add(new OxpsConfigExportCommand());
+$application->add(new ExportCommand());
 
-$application->add(new OxpsConfigImportCommand());
+$application->add(new ImportCommand());
     
     /** @var Application $application */
     try {
