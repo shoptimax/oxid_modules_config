@@ -66,6 +66,9 @@ class ImportCommand extends Command
      * @param InputInterface  $input OutputInterface $output
      * @param OutputInterface $output
      *
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      * @throws \oxfileexception
      */
     public function execute(InputInterface $input, OutputInterface $output)

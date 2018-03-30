@@ -4,9 +4,9 @@
 
 require __DIR__.'/../../../../bootstrap.php';
 
+use Oxps\ModulesConfig\Commands\ExportCommand;
+use Oxps\ModulesConfig\Commands\ImportCommand;
 use Symfony\Component\Console\Application;
-use Oxps\ModulesConfig\Commands\OxpsConfigImportCommand;
-use Oxps\ModulesConfig\Commands\OxpsConfigExportCommand;
 
 $application = new Application();
 
@@ -14,8 +14,8 @@ $application->add(new ExportCommand());
 
 $application->add(new ImportCommand());
     
-    /** @var Application $application */
-    try {
-        $application->run();
-    } catch (Exception $e) {
-    }
+/** @var Application $application */
+try {
+    $application->run();
+}
+catch (Exception $e) {}

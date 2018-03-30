@@ -92,7 +92,9 @@ class ConfigImport extends CommandBase
      * @param OutputInterface $output
      *
      * @return int|null|void
-     * @throws Exception
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
@@ -118,14 +120,15 @@ class ConfigImport extends CommandBase
             exit(3);
         }
     }
-
+    
     /**
      * runShopConfigImportForOneShop
      *
      * @param $sShop
      * @param $sRelativeFileName
      *
-     * @throws Exception
+     * @throws \OxidEsales\Eshop\Core\Exception\StandardException
+     * @throws \oxfileexception
      */
     protected function runShopConfigImportForOneShop($sShop, $sRelativeFileName)
     {
