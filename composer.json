@@ -11,12 +11,12 @@
   },
   "extra": {
     "oxideshop": {
-      "target-directory": "oxps/modulesconfig"
+      "target-directory": "oxps/ModulesConfig"
     }
   },
   "autoload": {
     "psr-4": {
-      "OxidProfessionalServices\\ConfigExportImport\\": "../../../source/modules/oxps/modulesconfig"
+      "Oxps\\ModulesConfig\\": "../../../source/modules/oxps/ModulesConfig"
     }
   }
 }

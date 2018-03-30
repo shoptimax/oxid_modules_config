@@ -81,24 +81,19 @@ class ConfigExport extends CommandBase
 //            $aReturn = $this->addModuleOrder($aReturn);
         
             $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
-//            var_dump($this->getConfigDir());
-//            var_dump("aShops:");
-//            var_dump($aShops); //  /shop1.yml
             $aReturn = $this->getEnvironmentSpecificConfigurationValues();
 
             $this->writeEnvironmentSpecificConfigurationValues($aReturn);
             $this->writeMetaConfigFile($aShops);
 
-            $this->getDebugOutput()->writeLn("done");
+//            $this->getDebugOutput()->writeLn("done");
             printf("Successfully exported!"."\n\n");
             
         } catch (RuntimeException $e) {
-//            var_dump("Runtime Exception");
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($e->getMessage());
             $this->getDebugOutput()->writeLn($e->getTraceAsString());
         } catch (oxFileException $oEx) {
-//            var_dump("oxFileException");
             $this->getDebugOutput()->writeLn("Could not complete");
             $this->getDebugOutput()->writeLn($oEx->getMessage());
         }
@@ -159,18 +154,13 @@ class ConfigExport extends CommandBase
     protected function filternestedExcludes($values){
         $excludeDeep = $this->aConfiguration['excludeDeep'];
         $moduleValues = &$values['module'];
-//        var_dump($moduleValues);
-    
+
         if (is_array($moduleValues) || is_object($moduleValues)) {
             foreach ($moduleValues as $moduleId => &$moduleSettings) {
-//                if (is_array($moduleSettings) || is_object($moduleSettings)) {
+                if (is_array($moduleSettings) || is_object($moduleSettings)) {
                     foreach ($moduleSettings as $sVarName => &$aVarValue) {
-//                        printf("0veikia!!!!!!!!!!!!!!!!!!!!!!!!!!   PARAM:            ");
-//                        printf("sVarName:  ".$sVarName."   aVarValue:   ".$aVarValue."    ! ");
                         if (is_array($aVarValue)) {
-//                            printf("1veikia!!!!!!!!!!!!!!!!!!!!!!!!!!");
                             if (isset($excludeDeep[$sVarName])) {
-//                                printf("2veikia!!!!!!!!!!!!!!!!!!!!!!!!!!");
                                 $innerExcludes = $excludeDeep[$sVarName];
                                 if (!is_array($innerExcludes)) {
                                     $innerExcludes = [$innerExcludes];
@@ -183,10 +173,10 @@ class ConfigExport extends CommandBase
                         }
                         
                     }
-//                }
+                }
             }
         }
-//        var_dump($values);
+        
         return $values;
     }
     
@@ -271,7 +261,7 @@ class ConfigExport extends CommandBase
                 foreach ($aModuleConfigs as $sModuleId => &$aModuleConfig) {
 
                     if (!$oModule->load($sModuleId)) {
-                        $this->handleModuleOnError($sModuleId);
+//                        $this->handleModuleOnError($sModuleId);
                         unset ($aModuleConfigs[$sModuleId]);
                         continue;
                     }
@@ -511,9 +501,6 @@ class ConfigExport extends CommandBase
         $aShops = array();
         foreach ($aData as $sShop => $aShopConfig) {
             $sFileName      = '/' . 'shop' . $sShop . '.' . $this->getFileExt();
-//            var_dump($sDirName . $sFileName);
-//            var_dump("aShopConfig:");
-//            var_dump($aShopConfig);
             
             $aShops[$sShop] = $sFileName;
             

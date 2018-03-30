@@ -83,8 +83,7 @@ class CommandBase extends Command
         $this->setDebugOutput();
         $this->initConfiguration();
         $aConfigIntersect = array_intersect($this->aConfiguration['excludeFields'], $this->aConfiguration['envFields']);
-//        var_dump("aConfigIntersect");
-//        var_dump($aConfigIntersect);
+
         if (count($aConfigIntersect) > 0) {
             $this->getDebugOutput()->writeLn(
                 "CAUTION: excludeFields and envFields are not disjoint! " . var_dump($aConfigIntersect)
@@ -159,13 +158,8 @@ class CommandBase extends Command
         $aAllEnvConfigs       = $this->aConfiguration['env'];
         $sFilename            = $sConfigurationsDir . 'defaultconfig' . DIRECTORY_SEPARATOR . 'defaults.yaml';
         $this->aDefaultConfig = $this->readConfigValues($sFilename, 'yaml');
-//        var_dump("DefaultConfig:");
-//        var_dump($this->aDefaultConfig);
         $aEnvConfig           = $aAllEnvConfigs[$this->sEnv];
         $this->aEnvConfig     = $aEnvConfig;
-    
-//        var_dump("aEnvConfig:");
-//        var_dump($aEnvConfig);
     }
     
     /**
