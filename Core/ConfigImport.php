@@ -107,8 +107,7 @@ class ConfigImport extends CommandBase
             // import environment specific config values
             $aMetaConfig = $this->readConfigValues($this->getShopsConfigFileName());
             $aShops = $aMetaConfig['shops'];
-//            var_dump($aShops);
-            
+
             $this->runShopConfigImportForAllShops($aShops);
             printf("Import successfully finished!\n");
         } catch (ParseException $e) {
@@ -146,9 +145,7 @@ class ConfigImport extends CommandBase
         }
         
         printf("Importing config for shop ".$sShop."\n");
-        var_dump("iseina");
         $this->importConfigValues($aResult);
-        var_dump("grizta?");
     }
     
     /**
@@ -245,7 +242,7 @@ class ConfigImport extends CommandBase
      * @throws \Exception
      * @throws StandardException
      *
-     * TODO: REFACTOR THIS METHOD, ADD MORE COMMENTS
+     * TODO: REFACTOR THIS METHOD, ADD MORE COMMENTS. (NOT READABLE)
      */
     protected function importConfigValues($aConfigValues)
     {
@@ -413,6 +410,8 @@ class ConfigImport extends CommandBase
      *
      * @return null
      * @throws \Exception
+     *
+     * TODO: REFACTOR THIS METHOD, ADD MORE COMMENTS. (NOT READABLE)
      */
     protected function importModuleConfig(&$aConfigValues)
     {
@@ -453,7 +452,7 @@ class ConfigImport extends CommandBase
                 $aDefaultModuleSettings[$aSetting['name']] = $aSetting;
             }
             $aModuleOverride = is_null($allModulesConfigFromYaml[$sModuleId]) ? array() : $allModulesConfigFromYaml[$sModuleId];
-//            var_dump($aModuleOverride);
+
             // merge from aModulesOverwrite into aDefaultModuleSettings
             $aMergedModuleSettings = array();
             foreach ($aDefaultModuleSettings as $sName => $aDefaultModuleSetting) {
@@ -644,7 +643,6 @@ class ConfigImport extends CommandBase
     protected function runShopConfigImportForAllShops($aShops)
     {
         foreach ($aShops as $sShop => $sFileName) {
-//            var_dump($sShop);
             $this->sShopId = $sShop;
             $this->storedVarTypes = $this->getStoredVarTypes();
             $this->runShopConfigImportForOneShop($sShop, $sFileName);
