@@ -36,7 +36,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 
 /**
- * Class oxpsModulesConfigConfigExport
+ * Class ConfigExport
  * Implements functionality for the oxpsConfigExportCommand
  */
 class ConfigExport extends CommandBase
@@ -77,7 +77,8 @@ class ConfigExport extends CommandBase
             $aGlobalExcludeFields = $this->getGlobalExcludedFields();
 
             $aReturn = $this->getCommonConfigurationValues($aGlobalExcludeFields);
-
+            
+            //Not useful interaction with method
 //            $aReturn = $this->addModuleOrder($aReturn);
         
             $aShops = $this->writeDataToFileSeperatedByShop($this->getConfigDir(), $aReturn);
@@ -85,8 +86,7 @@ class ConfigExport extends CommandBase
 
             $this->writeEnvironmentSpecificConfigurationValues($aReturn);
             $this->writeMetaConfigFile($aShops);
-
-//            $this->getDebugOutput()->writeLn("done");
+            
             printf("Successfully exported!"."\n\n");
             
         } catch (RuntimeException $e) {
