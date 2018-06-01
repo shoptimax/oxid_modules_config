@@ -53,7 +53,7 @@ class ModuleStateFixer extends ModuleInstaller
         $this->setTemplateBlocks($oModule->getInfo("blocks"), $sModuleId);
         $this->_addModuleFiles($oModule->getInfo("files"), $sModuleId);
         $this->_addTemplateFiles($oModule->getInfo("templates"), $sModuleId);
-        $this->_addModuleSettings($oModule->getInfo("settings"), $sModuleId);
+        //$this->_addModuleSettings($oModule->getInfo("settings"), $sModuleId);
         $this->_addModuleVersion($oModule->getInfo("version"), $sModuleId);
         $this->_addModuleEvents($oModule->getInfo("events"), $sModuleId);
 

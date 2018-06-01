@@ -261,8 +261,11 @@ class ConfigImport extends CommandBase
         $aModuleVersions = $this->getConfigValue($aConfigValues,'aModuleVersions');
         
         /** @var Module $oModule */
-        $oModule = new ModuleStateFixer();
-        
+        $oModuleFixer = new ModuleStateFixer();
+        /** @var Config $oConfig */
+        $oModuleFixer->setConfig($oConfig);
+
+        $oModule = new Module();
         /** @var Config $oConfig */
         $oModule->setConfig($oConfig);
 
@@ -348,18 +351,18 @@ class ConfigImport extends CommandBase
             //fix state again because class chain was reset by the import above
             //also onActivate call event can cause duplicate tpl blocks
             if ($oModule != null) {
-                if (method_exists($oModule, 'setDebugOutput')) {
-                    $oModule->setDebugOutput($this->getDebugOutput());
+                if (method_exists($oModuleFixer, 'setDebugOutput')) {
+                    $oModuleFixer->setDebugOutput($this->getDebugOutput());
                 }
-                $oModule->fix($oModule);
+                $oModuleFixer->fix($oModule);
             } else {
-                $oModule->fixVersion();
-                $oModule->fixExtendGently();
-                $oModule->fixFiles();
-                $oModule->fixTemplates();
-                $oModule->fixBlocks();
-                $oModule->fixSettings();
-                $oModule->fixEvents();
+                $oModuleFixer->fixVersion();
+                $oModuleFixer->fixExtendGently();
+                $oModuleFixer->fixFiles();
+                $oModuleFixer->fixTemplates();
+                $oModuleFixer->fixBlocks();
+                $oModuleFixer->fixSettings();
+                $oModuleFixer->fixEvents();
             }
 
 
@@ -688,7 +691,8 @@ class ConfigImport extends CommandBase
      */
     protected function saveThemeDisplayVars($sVarName, $mVarValue, $sModule)
     {
-        exit();
+        //exit();
+        
         $oDb = DatabaseProvider::getDb();
         $sModuleQuoted = $oDb->quote($sModule);
         $sVarNameQuoted = $oDb->quote($sVarName);
@@ -697,7 +701,7 @@ class ConfigImport extends CommandBase
         $sVarPosQuoted = isset($mVarValue['pos']) ? $oDb->quote($mVarValue['pos']) : '\'\'';
 
         $sNewOXIDdQuoted = $oDb->quote(UtilsObject::getInstance()->generateUID());
-        $sNewOXIDdQuoted = 'toto';
+        //$sNewOXIDdQuoted = 'toto';
 
         $sQ = "delete from oxconfigdisplay WHERE OXCFGVARNAME = $sVarNameQuoted and OXCFGMODULE = $sModuleQuoted";
         $oDb->execute($sQ);
@@ -706,7 +710,7 @@ class ConfigImport extends CommandBase
                values($sNewOXIDdQuoted, $sModuleQuoted, $sVarNameQuoted, $sVarGroupingQuoted, $sVarConstraintsQuoted, $sVarPosQuoted)";
         $oDb->execute($sQ);
 
-        $oConfig->executeDependencyEvent($sVarName);
+        //$oConfig->executeDependencyEvent($sVarName);
 
     }
 
